@@ -8,7 +8,7 @@ const bool enableValidationLayers = true;
 
 VulkanCore::VulkanCore()
 {
-	initVulkan();
+	InitVulkan();
 }
 
 VulkanCore::~VulkanCore()
@@ -17,9 +17,9 @@ VulkanCore::~VulkanCore()
 	delete instance;
 }
 
-void VulkanCore::initVulkan()
+void VulkanCore::InitVulkan()
 {
-	createInstance();
+	CreateInstance();
 }
 
 VkInstance* VulkanCore::GetInstance()
@@ -28,9 +28,14 @@ VkInstance* VulkanCore::GetInstance()
 }
 
 //Creates the Vulkan Instance
-void VulkanCore::createInstance()
+void VulkanCore::CreateInstance()
 {
 	instance = new VkInstance();
+
+	//Validation Layer check
+	if (enableValidationLayers && !CheckValidationLayerSupport()) {
+		throw std::runtime_error("validation layers requested, but not available!");
+	}
 
 	VkApplicationInfo appInfo{};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -56,7 +61,13 @@ void VulkanCore::createInstance()
 	createInfo.ppEnabledExtensionNames = glfwExtensions;
 
 	//Validation Layers
-	createInfo.enabledLayerCount = 0;	
+	if (enableValidationLayers) {
+		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+		createInfo.ppEnabledLayerNames = validationLayers.data();
+	}
+	else {
+		createInfo.enabledLayerCount = 0;
+	}
 
 	//Checks current required extension to loaded extensions
 	unsigned int extensionCount = 0;
@@ -80,5 +91,20 @@ bool VulkanCore::CheckValidationLayerSupport()
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-	return false;
+	for (const char* layerName : validationLayers) {
+		bool layerFound = false;
+
+		for (const auto& layerProperties : availableLayers) {
+			if (strcmp(layerName, layerProperties.layerName) == 0) {
+				layerFound = true;
+				break;
+			}
+		}
+
+		if (!layerFound) {
+			return false;
+		}
+	}
+
+	return true;
 }

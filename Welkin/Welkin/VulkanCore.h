@@ -9,12 +9,14 @@ class VulkanCore
 public:
 	VulkanCore();
 	~VulkanCore();
-	void initVulkan();
+	void InitVulkan();
 	VkInstance* GetInstance();
 private:
-	void createInstance();
-	bool CheckValidationLayerSupport();
+	void CreateInstance();
 	VkInstance* instance;
+
+	//Validation Layers
+	bool CheckValidationLayerSupport();
 	const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 };
 
