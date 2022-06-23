@@ -13,6 +13,7 @@ WkWindow::~WkWindow()
 
 void WkWindow::InitWindow()
 {
+	Helper::Cout("WkWindow", true);
 	if (!glfwInit())
 	{
 		throw std::runtime_error("failed to initalize window named: " + windowName);
@@ -22,8 +23,9 @@ void WkWindow::InitWindow()
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	//Monitor nullptr can be changed for fullscreen mode
-	cout << "Created Window: " + windowName << endl;
+	Helper::Cout("Created Window: " + windowName);
 	window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+	Helper::Cout("Window Created");
 }
 
 string WkWindow::GetWindowName()
