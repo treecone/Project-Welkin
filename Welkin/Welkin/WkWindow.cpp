@@ -28,6 +28,11 @@ void WkWindow::InitWindow()
 	Helper::Cout("Window Created");
 }
 
+GLFWwindow* WkWindow::GetWindow()
+{
+	return this->window;
+}
+
 string WkWindow::GetWindowName()
 {
 	return this->windowName;

@@ -10,7 +10,7 @@ void Game::Init()
 	mainWindow = new WkWindow{ WIDTH, HEIGHT, "Main Welkin Window" };
 
 	//Init's the vulkan core
-	vulkanCore = new VulkanCore();
+	vulkanCore = new VulkanCore(mainWindow->GetWindow());
 
 }
 

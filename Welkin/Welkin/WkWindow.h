@@ -13,6 +13,7 @@ public:
 	WkWindow(unsigned int w, unsigned int h, string name);
 	~WkWindow();
 	void InitWindow();
+	GLFWwindow* GetWindow();
 	string GetWindowName();
 	bool shouldClose() {return glfwWindowShouldClose(window);};
 

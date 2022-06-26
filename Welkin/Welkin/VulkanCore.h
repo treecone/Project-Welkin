@@ -1,54 +1,39 @@
 #pragma once
-#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
+#include <vulkan/vulkan.h>
 #include <vector>
-#include <optional>
+#include <string>
 #include "Helper.h"
-
-struct QueueFamilyIndices
-{
-	std::optional<unsigned int> graphicsFamily;
-
-	bool isComplete()
-	{
-		return graphicsFamily.has_value();
-	}
-};
-
 
 class VulkanCore
 {
 public:
-	//Directs graphic commands to the hardware, LogicalDevice.
-	VkDevice device;
-	//The Vulkan Instance
-	VkInstance instance;
-	//Actual physical device aka the g card
-	VkPhysicalDevice physicalDevice;
-	//One of the types of queues, created in help from the index we got earlier
-	VkQueue graphicsQueue;
-	//Stuct of the locations of the queue families we need
-	QueueFamilyIndices indices;
-	// represents an abstract type of surface to present rendered images to
-	VkSurfaceKHR surface;
-
-
-
-
-	VulkanCore();
+	VulkanCore(GLFWwindow* window);
 	~VulkanCore();
-	void InitVulkan();
+
 private:
-	void CreateInstance();
-	void CreateLogicalDevice();
-	void PickPhysicalDevice();
-	bool IsDeviceSuitable(VkPhysicalDevice device);
-	void FindQueueFamilies(VkPhysicalDevice device);
+	GLFWwindow* window;
+	VkInstance instance;
 
 
-
-	//Validation Layers
+	void InitVulkan();
+	void createInstance();
+	void CheckAvaiableExtensions();
 	bool CheckValidationLayerSupport();
-	const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
+
+
+	#pragma region ValidationLayers
+
+		//Vector containing all the validation layers I want enabled
+		const std::vector<const char*> validationLayers = {
+		"VK_LAYER_KHRONOS_validation"
+		};
+
+		#ifdef NDEBUG
+			const bool enableValidationLayers = false;
+		#else
+			const bool enableValidationLayers = true;
+		#endif
+	#pragma endregion
+
 };
