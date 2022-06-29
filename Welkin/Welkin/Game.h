@@ -2,6 +2,8 @@
 
 #include "WkWindow.h"
 #include "VulkanCore.h"
+#include "Renderer.h"
+#include "FileManager.h"
 
 class Game
 {
@@ -16,6 +18,8 @@ private:
 
 	WkWindow* mainWindow;
 	VulkanCore* vulkanCore;
+	FileManager* fileManager;
+	Renderer* renderer;
 
 	void Init();
 };

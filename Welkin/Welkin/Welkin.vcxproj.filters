@@ -33,6 +33,12 @@
     <ClCompile Include="Helper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WkWindow.h">
@@ -47,5 +53,22 @@
     <ClInclude Include="Helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SimpleShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="SimpleShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="complie.bat">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

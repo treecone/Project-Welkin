@@ -8,31 +8,43 @@
 #include <string>
 #include <optional>
 #include "Helper.h"
+#include "FileManager.h"
 
 class VulkanCore
 {
 public:
-	VulkanCore(GLFWwindow* window);
+	VulkanCore(GLFWwindow* window, FileManager* fileManager);
 	~VulkanCore();
 
 private:
 	GLFWwindow* window;
+	FileManager* fm;
+
 	//Main Vulkan Instance
 	VkInstance instance;
+
 	//Graphics card selected and being used
 	VkPhysicalDevice physicalDevice;
+
 	//Logical Device
 	VkDevice device;
+
 	//Provides the ability to interface with the window system (aka GLFW)
 	//Represents an abstract type of surface to present rednered images to
 	VkSurfaceKHR surface;
 
 	VkSwapchainKHR swapChain;
 	std::vector<VkImage> swapChainImages;
+
 	//Access images and do stuff with them
 	std::vector<VkImageView> swapChainImageViews;
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
+
+	//Graphics pipeline -----------
+	VkRenderPass renderPass;
+	VkPipelineLayout pipelineLayout;
+	VkPipeline graphicsPipeline;
 
 
 
@@ -45,6 +57,8 @@ private:
 	void CreateInstance();
 	void CheckAvaiableExtensions();
 	bool CheckValidationLayerSupport();
+	void CreateRenderPass();
+	void CreateGraphicsPipeline();
 
 	//Physical Device ---------------------------------
 
