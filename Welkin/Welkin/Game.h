@@ -22,5 +22,11 @@ private:
 	Renderer* renderer;
 
 	void Init();
+	//Move to renderer - RENDERER ---------------------
+	void DrawFrame();
+	void createSyncObjects();
+	VkSemaphore imageAvailableSemaphore;
+	VkSemaphore renderFinishedSemaphore;
+	VkFence inFlightFence;
 };
 
