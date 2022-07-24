@@ -1,11 +1,12 @@
-#version 450 
+#version 450
 
+//layout(location = 0) modifier specifies the index of the framebuffer
+//location and pairs the var, so the names dont need to match in the vert shader
 layout(location = 0) out vec4 outColor;
 
 layout(location = 0) in vec3 fragColor;
 
-
-void main()
+void main() 
 {
-	outColor = vec4(fragColor, 1.0);
+    outColor = vec4(fragColor, 1.0);
 }

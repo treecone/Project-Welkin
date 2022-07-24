@@ -1,5 +1,5 @@
 #include "Game.h"
-
+#include "Helper.h"
 #include <cstdlib>
 #include<iostream>
 #include <stdexcept>
@@ -10,6 +10,7 @@ int main()
 
 	try
 	{
+		Helper::Cout("Update", true);
 		game.Update();
 	}
 	catch(const std::exception &e)

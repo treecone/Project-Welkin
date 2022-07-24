@@ -14,7 +14,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Shaders">
-      <UniqueIdentifier>{b1841075-fe96-41f3-810f-2931d1de3e00}</UniqueIdentifier>
+      <UniqueIdentifier>{2d0fc3bd-5bd9-4482-ab2c-434ed730c810}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -66,9 +66,6 @@
     </None>
     <None Include="SimpleShader.frag">
       <Filter>Shaders</Filter>
-    </None>
-    <None Include="complie.bat">
-      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
 </Project>

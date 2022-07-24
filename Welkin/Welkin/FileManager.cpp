@@ -1,16 +1,19 @@
 #include "FileManager.h"
 
-FileManager::FileManager()
+FileManager::FileManager(VkDevice* device)
 {
     Helper::Cout("File Manager", true);
+    this->device = device;
+    LoadAllShaders(device);
 }
 
 void FileManager::LoadAllShaders(VkDevice* logicalDevice)
 {
-    Helper::Cout("[File Manager]Loading Shaders");
+    Helper::Cout("Loading Shaders");
+    Helper::Cout("[Note] Maybe make it so it doesn't load all shaders?");
 
     std::string path = "Shaders/";
-    std::string ext = {".spv"};
+    std::string ext = { ".spv" };
     for (auto& entity : fs::recursive_directory_iterator(path))
     {
         std::string fileName = entity.path().filename().string();
@@ -19,12 +22,12 @@ void FileManager::LoadAllShaders(VkDevice* logicalDevice)
             if (entity.path().extension() == ext)
             {
                 allShaders.insert({fileName, CreateShaderModule(ReadFile(path + fileName), logicalDevice)});
-                Helper::Cout("[File Manager]- Loaded Shader: " + fileName);
-            }   
+                Helper::Cout("- Loaded Shader: " + fileName);
+            }
         }
     }
 
-    Helper::Cout("[File Manager]All Shaders Loaded!");
+    Helper::Cout("All Shaders Loaded!");
 }
 
 VkShaderModule FileManager::CreateShaderModule(const std::vector<char>& shaderCode, VkDevice* logicalDevice)
@@ -36,10 +39,18 @@ VkShaderModule FileManager::CreateShaderModule(const std::vector<char>& shaderCo
 
     VkShaderModule shaderModule;
     if (vkCreateShaderModule(*logicalDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-        throw std::runtime_error("[File Manager] failed to create shader module!");
+        throw std::runtime_error("failed to create shader module!");
     }
 
     return shaderModule;
+}
+
+FileManager::~FileManager()
+{
+    for (const auto& shaderFile : allShaders)
+    {
+        vkDestroyShaderModule(*device, shaderFile.second, nullptr);
+    }
 }
 
 std::vector<char> FileManager::ReadFile(const std::string& filename)
@@ -47,7 +58,7 @@ std::vector<char> FileManager::ReadFile(const std::string& filename)
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
-        throw std::runtime_error("[File Manager] failed to open file!");
+        throw std::runtime_error("failed to open file!");
     }
 
     size_t fileSize = (size_t)file.tellg();

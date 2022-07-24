@@ -12,12 +12,13 @@ namespace fs = std::filesystem;
 class FileManager
 {
 public:
-	FileManager();
+	FileManager(VkDevice* device);
 	std::map<std::string, VkShaderModule> allShaders;
 	void LoadAllShaders(VkDevice* logicalDevice);
+	~FileManager();
 
 private:
+	VkDevice* device;
 	static std::vector<char> ReadFile(const std::string& filename);
 	VkShaderModule CreateShaderModule(const std::vector<char>& shaderCode, VkDevice* device);
 };
-
