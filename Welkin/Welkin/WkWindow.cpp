@@ -20,12 +20,18 @@ void WkWindow::InitWindow()
 	}
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_NO_API);
 
 	//Monitor nullptr can be changed for fullscreen mode
 	Helper::Cout("Created Window: " + windowName);
 	window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+	glfwSetWindowUserPointer(window, this);
 	Helper::Cout("Window Created");
+}
+
+void WkWindow::SetVCore(VulkanCore* core)
+{
+	this->vCore = core;
 }
 
 GLFWwindow* WkWindow::GetWindow()

@@ -9,21 +9,17 @@ void Game::Init()
 {
 	mainWindow = new WkWindow{ WIDTH, HEIGHT, "Main Welkin Window" };
 
+	fileManager = new FileManager();
+
 	//Init's the vulkan core
-	vulkanCore = new VulkanCore(mainWindow->GetWindow());
-
-	fileManager = new FileManager(vulkanCore->GetLogicalDevice());
-
-	renderer = new Renderer(vulkanCore, fileManager);
-
+	vCore = new VulkanCore(mainWindow->GetWindow(), fileManager);
 }
 
 Game::~Game()
 {
 	//Clean up all other vulkan resources before
-	delete renderer;
 	delete fileManager;
-	delete vulkanCore;
+	delete vCore;
 	delete mainWindow;
 }
 
@@ -32,8 +28,10 @@ void Game::Update()
 	while (!mainWindow->shouldClose())
 	{
 		glfwPollEvents();
-		renderer->DrawFrame();
+		vCore->DrawFrame();
 	}
 
-	vkDeviceWaitIdle(*vulkanCore->GetLogicalDevice());
+	vkDeviceWaitIdle(*vCore->GetLogicalDevice());
+
+	vCore->currentFrame = (vCore->currentFrame + 1) & vCore->MAX_FRAMES_IN_FLIGHT;
 }

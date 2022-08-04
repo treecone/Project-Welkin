@@ -1,6 +1,6 @@
 #include "FileManager.h"
 
-FileManager::FileManager(VkDevice* device)
+void FileManager::Init(VkDevice* device)
 {
     Helper::Cout("File Manager", true);
     this->device = device;

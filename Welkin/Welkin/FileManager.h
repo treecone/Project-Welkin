@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 class FileManager
 {
 public:
-	FileManager(VkDevice* device);
+	void Init(VkDevice* device);
 	std::map<std::string, VkShaderModule> allShaders;
 	void LoadAllShaders(VkDevice* logicalDevice);
 	~FileManager();

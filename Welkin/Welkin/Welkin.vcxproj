@@ -147,7 +147,6 @@
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Helper.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="VulkanCore.cpp" />
     <ClCompile Include="WkWindow.cpp" />
   </ItemGroup>
@@ -155,7 +154,6 @@
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Helper.h" />
-    <ClInclude Include="Renderer.h" />
     <ClInclude Include="VulkanCore.h" />
     <ClInclude Include="WkWindow.h" />
   </ItemGroup>

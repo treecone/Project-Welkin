@@ -2,7 +2,6 @@
 
 #include "WkWindow.h"
 #include "VulkanCore.h"
-#include "Renderer.h"
 #include "FileManager.h"
 
 class Game
@@ -17,16 +16,9 @@ private:
 	unsigned int HEIGHT = 512;
 
 	WkWindow* mainWindow;
-	VulkanCore* vulkanCore;
+	VulkanCore* vCore;
 	FileManager* fileManager;
-	Renderer* renderer;
 
 	void Init();
-	//Move to renderer - RENDERER ---------------------
-	void DrawFrame();
-	void createSyncObjects();
-	VkSemaphore imageAvailableSemaphore;
-	VkSemaphore renderFinishedSemaphore;
-	VkFence inFlightFence;
 };
 

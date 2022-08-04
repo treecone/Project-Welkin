@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include "VulkanCore.h"
 #include "Helper.h"
 
 using namespace std;
@@ -13,6 +14,7 @@ public:
 	WkWindow(unsigned int w, unsigned int h, string name);
 	~WkWindow();
 	void InitWindow();
+	void SetVCore(VulkanCore* core);
 	GLFWwindow* GetWindow();
 	string GetWindowName();
 	bool shouldClose() {return glfwWindowShouldClose(window);};
@@ -26,6 +28,7 @@ public:
 private:
 	unsigned int width, height;
 	string windowName;
+	VulkanCore* vCore;
 	GLFWwindow* window;
 };
 
