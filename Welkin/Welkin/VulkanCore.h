@@ -160,6 +160,7 @@ private:
 	VkDeviceMemory vertexBufferMemory;
 
 	void CreateVertexBuffer();
+	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 	struct Vertex 
@@ -199,7 +200,7 @@ private:
 
 	const std::vector<Vertex> vertices = 
 	{
-		{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.0f, -0.5f}, {1.0f, 0.0f, 1.0f}},
 		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
 		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 	};
