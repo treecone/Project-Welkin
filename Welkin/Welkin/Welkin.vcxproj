@@ -158,8 +158,8 @@
     <ClInclude Include="WkWindow.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="SimpleShader.frag" />
-    <None Include="SimpleShader.vert" />
+    <None Include="Shaders\SimpleShader.frag" />
+    <None Include="Shaders\SimpleShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

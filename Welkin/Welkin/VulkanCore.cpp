@@ -12,6 +12,9 @@ VulkanCore::~VulkanCore()
 {
 	CleanupSwapChain();
 
+	vkDestroyBuffer(device, vertexBuffer, nullptr);
+	vkFreeMemory(device, vertexBufferMemory, nullptr);
+
 	//Graphics pipeline/stuff
 	vkDestroyPipeline(device, graphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
@@ -54,6 +57,9 @@ void VulkanCore::InitVulkan()
 	CreateGraphicsPipeline();
 	CreateFramebuffers();
 	CreateCommandPool();
+
+	CreateVertexBuffer();
+
 	CreateCommandBuffers();
 	CreateSyncObjects();
 
@@ -885,15 +891,21 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		//Format of the vertex data passed to the vertex shader
 		#pragma region Vertex Input
-	//How vertex data will be passed to the vertex shader
+
+		//How vertex data will be passed to the vertex shader
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+
+		auto bindingDescription = Vertex::getBindingDescription();
+		auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		//Spacing between data and per-vertex/per-instance 9instancing)
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
-#pragma endregion
+		vertexInputInfo.vertexBindingDescriptionCount = 1;
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+		#pragma endregion
 
 		//(1) What kind of geometry will be drawn from the verties
 		//(2) What type of primitive restart will be enabled (such as triangle list, struo, and line strip)
@@ -1185,6 +1197,10 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
+		VkBuffer vertexBuffers[] = { vertexBuffer };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
 		#pragma region Dynamic States
 		VkViewport viewport{};
 		viewport.x = 0.0f;
@@ -1201,7 +1217,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 		#pragma endregion
 
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -1215,3 +1231,69 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 	}
 #pragma endregion
+
+//3 Steps for buffer - (Allocate Device Mem, Create Buffer, Bind them together)
+#pragma region Buffers and such
+
+	void VulkanCore::CreateVertexBuffer()
+	{
+		#pragma region Create Buffer
+
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = sizeof(vertices[0]) * vertices.size();
+		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		if (vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("failed to create vertex buffer!");
+		}
+		#pragma endregion
+
+		#pragma region Assign Memory
+			VkMemoryRequirements memRequirements;
+			vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
+
+			VkMemoryAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			allocInfo.allocationSize = memRequirements.size;
+			allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+			if (vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) 
+			{
+				throw std::runtime_error("failed to allocate vertex buffer memory!");
+			}
+		#pragma endregion
+
+		vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
+
+		#pragma region Copy vertex data to buffer
+			
+		void* dataPointer;
+		vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &dataPointer);
+		memcpy(dataPointer, vertices.data(), (size_t)bufferInfo.size);
+		vkUnmapMemory(device, vertexBufferMemory);
+
+		#pragma endregion
+
+	}
+
+	uint32_t VulkanCore::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) 
+	{
+		VkPhysicalDeviceMemoryProperties memProperties;
+		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) 
+		{
+			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) 
+			{
+				return i;
+			}
+		}
+
+		throw std::runtime_error("failed to find suitable memory type!");
+	}
+
+#pragma endregion
+
