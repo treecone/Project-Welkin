@@ -1238,14 +1238,72 @@ void VulkanCore::SetWindowSize(int width, int height)
 	void VulkanCore::CreateVertexBuffer()
 	{
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertexBuffer, vertexBufferMemory);
-
-		#pragma region Copy vertex data to buffer
+		
+		//Staging Buffer
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+		
+		#pragma region Copy vertex data to staging buffer
 			void* dataPointer;
-			vkMapMemory(device, vertexBufferMemory, 0, bufferSize, 0, &dataPointer);
+			vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &dataPointer);
 			memcpy(dataPointer, vertices.data(), (size_t)bufferSize);
-			vkUnmapMemory(device, vertexBufferMemory);
+			vkUnmapMemory(device, stagingBufferMemory);
 		#pragma endregion
+
+		//Because its DEVICE_LOCAL_BIT, cant map to it
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+		CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+		//Clean it up
+		vkDestroyBuffer(device, stagingBuffer, nullptr);
+		vkFreeMemory(device, stagingBufferMemory, nullptr);
+	}
+
+	void VulkanCore::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) 
+	{
+		//Memory transfer operations are exacuted using cmd buffers
+
+		#pragma region Create Temp Cmd Buffer
+			VkCommandBufferAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			allocInfo.commandPool = commandPool;
+			allocInfo.commandBufferCount = 1;
+
+			VkCommandBuffer commandBuffer;
+			vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+		#pragma endregion
+
+		#pragma region Record Cmd Buffer
+			VkCommandBufferBeginInfo beginInfo{};
+			beginInfo.sType =  VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+			vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+			VkBufferCopy copyRegion{};
+			copyRegion.srcOffset = 0; // Optional
+			copyRegion.dstOffset = 0; // Optional
+			copyRegion.size = size;
+			vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+			vkEndCommandBuffer(commandBuffer);
+		#pragma endregion
+
+		#pragma region Submit To Queue
+			VkSubmitInfo submitInfo{};
+			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+
+			vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+			//Could use a fence here, allowing me to schedule multple transfers at the same time 
+			vkQueueWaitIdle(graphicsQueue);
+
+			vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+		#pragma endregion
+
 	}
 
 	void VulkanCore::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
