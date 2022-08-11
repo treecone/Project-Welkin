@@ -158,8 +158,11 @@ private:
 
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
 
 	void CreateVertexBuffer();
+	void CreateIndexBuffer();
 	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -201,10 +204,14 @@ private:
 
 	const std::vector<Vertex> vertices = 
 	{
-		{{0.0f, -0.5f}, {1.0f, 0.0f, 1.0f}},
-		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 	};
+
+	//using less then 65535 vertices, so uint16 
+	const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
 #pragma endregion
 

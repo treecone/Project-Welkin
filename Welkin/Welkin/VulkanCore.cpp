@@ -12,8 +12,13 @@ VulkanCore::~VulkanCore()
 {
 	CleanupSwapChain();
 
-	vkDestroyBuffer(device, vertexBuffer, nullptr);
-	vkFreeMemory(device, vertexBufferMemory, nullptr);
+	#pragma region Buffer Cleanup
+		vkDestroyBuffer(device, indexBuffer, nullptr);
+		vkFreeMemory(device, indexBufferMemory, nullptr);
+
+		vkDestroyBuffer(device, vertexBuffer, nullptr);
+		vkFreeMemory(device, vertexBufferMemory, nullptr);
+	#pragma endregion
 
 	//Graphics pipeline/stuff
 	vkDestroyPipeline(device, graphicsPipeline, nullptr);
@@ -59,6 +64,7 @@ void VulkanCore::InitVulkan()
 	CreateCommandPool();
 
 	CreateVertexBuffer();
+	CreateIndexBuffer();
 
 	CreateCommandBuffers();
 	CreateSyncObjects();
@@ -1197,9 +1203,12 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-		VkBuffer vertexBuffers[] = { vertexBuffer };
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+		#pragma region Buffers
+			VkBuffer vertexBuffers[] = { vertexBuffer };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+		#pragma endregion
 
 		#pragma region Dynamic States
 		VkViewport viewport{};
@@ -1217,7 +1226,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 		#pragma endregion
 
-		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -1233,7 +1242,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 #pragma endregion
 
 //3 Steps for buffer - (Allocate Device Mem, Create Buffer, Bind them together)
-#pragma region Buffers and such
+#pragma region Buffers
 
 	void VulkanCore::CreateVertexBuffer()
 	{
@@ -1256,6 +1265,30 @@ void VulkanCore::SetWindowSize(int width, int height)
 		CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
 		//Clean it up
+		vkDestroyBuffer(device, stagingBuffer, nullptr);
+		vkFreeMemory(device, stagingBufferMemory, nullptr);
+	}
+
+	void VulkanCore::CreateIndexBuffer()
+	{
+		VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+		#pragma region Copy vertex data to staging buffer
+			void* data;
+			vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+			memcpy(data, indices.data(), (size_t)bufferSize);
+			vkUnmapMemory(device, stagingBufferMemory);
+		#pragma endregion
+		
+
+		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+
+		CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
 		vkDestroyBuffer(device, stagingBuffer, nullptr);
 		vkFreeMemory(device, stagingBufferMemory, nullptr);
 	}
