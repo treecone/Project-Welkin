@@ -7,6 +7,7 @@
 #include <vector>
 #include <set>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <array>
 #include "FileManager.h"
 #include <string>
@@ -212,6 +213,25 @@ private:
 
 	//using less then 65535 vertices, so uint16 
 	const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+
+	//Descriptors --------------
+
+	void CreateDescriptorSetLayout();
+	void UpdateUniformBuffer(uint32_t currentImage);
+	void CreateUniformBuffers();
+
+
+	//Multiple ones, bc mulitple frames may be in flight at the same time 
+	std::vector<VkBuffer> uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
+
+	VkDescriptorSetLayout descriptorSetLayout;
+
+	struct UniformBufferObject {
+		glm::mat4 model;
+		glm::mat4 view;
+		glm::mat4 proj;
+	};
 
 #pragma endregion
 

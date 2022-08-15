@@ -12,6 +12,16 @@ VulkanCore::~VulkanCore()
 {
 	CleanupSwapChain();
 
+	#pragma region Descriptor Cleanup
+		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+
+		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+		{
+			vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+			vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+		}
+	#pragma endregion
+
 	#pragma region Buffer Cleanup
 		vkDestroyBuffer(device, indexBuffer, nullptr);
 		vkFreeMemory(device, indexBufferMemory, nullptr);
@@ -59,12 +69,14 @@ void VulkanCore::InitVulkan()
 
 	Helper::Cout("Renderer", true);
 	CreateRenderPass();
+	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
 	CreateFramebuffers();
 	CreateCommandPool();
 
 	CreateVertexBuffer();
 	CreateIndexBuffer();
+	CreateUniformBuffers();
 
 	CreateCommandBuffers();
 	CreateSyncObjects();
@@ -1387,6 +1399,69 @@ void VulkanCore::SetWindowSize(int width, int height)
 		}
 
 		throw std::runtime_error("failed to find suitable memory type!");
+	}
+
+	//Provides details about the descriptor binding used during pipeline creation
+	void VulkanCore::CreateDescriptorSetLayout()
+	{
+		#pragma region DescriptorSetLayoutBinding
+				VkDescriptorSetLayoutBinding uboLayoutBinding{};
+				uboLayoutBinding.binding = 0;
+				uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				//Shader variable can represent an array of uniform buffer objects with count and binding 
+				uboLayoutBinding.descriptorCount = 1;
+				//Could also be SHADER_STAGE_ALL_GRAPHICS
+				uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+				//Img sampling
+				uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+		#pragma endregion
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = 1;
+		layoutInfo.pBindings = &uboLayoutBinding;
+
+		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("failed to create descriptor set layout!");
+		}
+	}
+
+	void VulkanCore::CreateUniformBuffers()
+	{
+		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+		uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+
+		for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+		}
+	}
+
+	void VulkanCore::UpdateUniformBuffer(uint32_t currentImage)
+	{
+		static auto startTime = std::chrono::high_resolution_clock::now();
+
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+		#pragma region Actual Calculations
+			UniformBufferObject ubo{};
+			ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+
+			//GLM flips the Y, so we need to correct it
+			ubo.proj[1][1] *= -1;
+		#pragma endregion
+
+		void* dataPointer;
+		vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &dataPointer);
+		memcpy(dataPointer, &ubo, sizeof(ubo));
+		vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
+
 	}
 
 #pragma endregion
