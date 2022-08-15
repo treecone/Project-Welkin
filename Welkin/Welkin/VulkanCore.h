@@ -218,6 +218,8 @@ private:
 
 	void CreateDescriptorSetLayout();
 	void UpdateUniformBuffer(uint32_t currentImage);
+	void CreateDescriptorPool();
+	void CreateDescriptorSets();
 	void CreateUniformBuffers();
 
 
@@ -226,6 +228,9 @@ private:
 	std::vector<VkDeviceMemory> uniformBuffersMemory;
 
 	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorPool descriptorPool;
+	std::vector<VkDescriptorSet> descriptorSets;
+
 
 	struct UniformBufferObject {
 		glm::mat4 model;
