@@ -231,11 +231,19 @@ private:
 	VkDescriptorPool descriptorPool;
 	std::vector<VkDescriptorSet> descriptorSets;
 
+	/*
+	- Allignment: (bytes)
+	-- Scalars : 4
+	-- Vec2 : 8
+	-- Vec3/4 : 16
+	-- Nested : 16
+	-- Mat4 : 16
+	*/
 
 	struct UniformBufferObject {
-		glm::mat4 model;
-		glm::mat4 view;
-		glm::mat4 proj;
+		alignas (16) glm::mat4 model;
+		alignas (16) glm::mat4 view;
+		alignas (16) glm::mat4 proj;
 	};
 
 #pragma endregion
