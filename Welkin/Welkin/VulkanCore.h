@@ -172,6 +172,7 @@ private:
 	{
 		glm::vec2 pos;
 		glm::vec3 color;
+		glm::vec2 texCoord;
 
 
 		//Describes at which rate to load data from memory throughout the vertices
@@ -185,9 +186,9 @@ private:
 		}
 
 		//How to handle the input 
-		static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() 
+		static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() 
 		{
-			std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+			std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 
 			attributeDescriptions[0].binding = 0;
 			attributeDescriptions[0].location = 0;
@@ -199,16 +200,21 @@ private:
 			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 			attributeDescriptions[1].offset = offsetof(Vertex, color);
 
+			attributeDescriptions[2].binding = 0;
+			attributeDescriptions[2].location = 2;
+			attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+
 			return attributeDescriptions;
 		}
 	};
 
 	const std::vector<Vertex> vertices = 
 	{
-		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
 	};
 
 	//using less then 65535 vertices, so uint16 
@@ -246,6 +252,24 @@ private:
 		alignas (16) glm::mat4 proj;
 	};
 
+#pragma endregion
+
+#pragma region Image
+	void CreateTextureImage();
+	void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+	VkCommandBuffer BeginSingleTimeCommands();
+	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+	void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+	void CreateTextureImageView();
+	VkImageView CreateImageView(VkImage image, VkFormat format);
+	void CreateTextureSampler();
+
+
+	VkImage textureImage;
+	VkSampler textureSampler;
+	VkDeviceMemory textureImageMemory;
+	VkImageView textureImageView;
 #pragma endregion
 
 };
