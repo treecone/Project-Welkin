@@ -84,8 +84,9 @@ void VulkanCore::InitVulkan()
 	CreateRenderPass();
 	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
-	CreateFramebuffers();
 	CreateCommandPool();
+	CreateDepthResources();
+	CreateFramebuffers();
 
 	CreateTextureImage();
 	CreateTextureImageView();
@@ -610,7 +611,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		for (unsigned int i = 0; i < swapChainImages.size(); i++) 
 		{
-			swapChainImageViews[i] = CreateImageView(swapChainImages[i], swapChainImageFormat);
+			swapChainImageViews[i] = CreateImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 
 		Helper::Cout("Created Image Views!");
@@ -628,6 +629,11 @@ void VulkanCore::SetWindowSize(int width, int height)
 	*/
 	void VulkanCore::CleanupSwapChain()
 	{
+		//Depth/stencil
+		vkDestroyImageView(device, depthImageView, nullptr);
+		vkDestroyImage(device, depthImage, nullptr);
+		vkFreeMemory(device, depthImageMemory, nullptr);
+
 		for (unsigned int i = 0; i < swapChainFrameBuffers.size(); i++) 
 		{
 			vkDestroyFramebuffer(device, swapChainFrameBuffers[i], nullptr);
@@ -671,6 +677,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		//Image views need to be recreated because they are based directly on the swap chain images
 		CreateImageViews();
+		CreateDepthResources();
 		//The framebuffers directly depend on the swap chain images, and thus must be recreated as well 
 		CreateFramebuffers();
 	}
@@ -790,72 +797,87 @@ void VulkanCore::SetWindowSize(int width, int height)
 	void VulkanCore::CreateRenderPass()
 	{
 		#pragma region Color and Formats, Clearing New Frames
-		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = swapChainImageFormat;
-		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		//Determines what should we do with the data in the attachment before rendering and after rendering
-		//Options LoadOP: LOAD OP LOAD - perserve contents, LOAD OP CLEAR - Clear the values to a constant, LOAD OP DONT CARE - We dont care about them
-		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		//Options for storeOP: STORE OP STORE - Rendered contents will be stored in memory and be read later, STORE OP DONT CARE - Dont
-		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			VkAttachmentDescription colorAttachment{};
+			colorAttachment.format = swapChainImageFormat;
+			colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+			//Determines what should we do with the data in the attachment before rendering and after rendering
+			//Options LoadOP: LOAD OP LOAD - perserve contents, LOAD OP CLEAR - Clear the values to a constant, LOAD OP DONT CARE - We dont care about them
+			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			//Options for storeOP: STORE OP STORE - Rendered contents will be stored in memory and be read later, STORE OP DONT CARE - Dont
+			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
-		//Now for the same thing, but with stencils. CHANGE THIS IF USING STENCILS
-		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			//Now for the same thing, but with stencils. CHANGE THIS IF USING STENCILS
+			colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-		//Images are going to need to be transitioned, so this in the initial format
-		//For example, Color attachment, present format, transfer format
-		//Before Render pass
-		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		//After Render pass
-		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			//Images are going to need to be transitioned, so this in the initial format
+			//For example, Color attachment, present format, transfer format
+			//Before Render pass
+			colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			//After Render pass
+			colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+			//Create more of these if u need more then just a color attachment
+			VkAttachmentReference colorAttachmentRef{};
+			colorAttachmentRef.attachment = 0;
+			colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		#pragma endregion
+
+		#pragma region Depth Attachment
+			VkAttachmentDescription depthAttachment{};
+			depthAttachment.format = FindDepthFormat();
+			depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+			VkAttachmentReference depthAttachmentRef{};
+			depthAttachmentRef.attachment = 1;
+			depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		#pragma endregion
 
 		//Refrences the past passes, including dependancies and such
 		#pragma region Subpasses
-
-	//Create more of these if u need more then just a color attachment
-		VkAttachmentReference colorAttachmentRef{};
-		colorAttachmentRef.attachment = 0;
-		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		//-------------------------------------
-
-		VkSubpassDescription subpass{};
-		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &colorAttachmentRef;
+			VkSubpassDescription subpass{};
+			subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+			subpass.colorAttachmentCount = 1;
+			subpass.pColorAttachments = &colorAttachmentRef;
+			subpass.pDepthStencilAttachment = &depthAttachmentRef;
 		#pragma endregion
 
 		#pragma region Subpass Dependencies
-		//Specify memory managment and execution dependencies between subpasses
-		//Even if we only have one, the operations before and after this one subpass count 
+			//Specify memory managment and execution dependencies between subpasses
+			//Even if we only have one, the operations before and after this one subpass count 
 
-		VkSubpassDependency dependency{};
-		//SUBPASS_EXTERNAL = subpass before or after the render pass depending on if its src or dst 
-		//dst must be > then src subpass (unless SUBPASS_EXTERNAL)
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
+			VkSubpassDependency dependency{};
+			//SUBPASS_EXTERNAL = subpass before or after the render pass depending on if its src or dst 
+			//dst must be > then src subpass (unless SUBPASS_EXTERNAL)
+			dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+			dependency.dstSubpass = 0;
 
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
+			dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependency.srcAccessMask = 0;
 
-		//Prevents the transition from happening until we actual want to start writing colors to it
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			//Prevents the transition from happening until we actual want to start writing colors to it
+			dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 		#pragma endregion
 
 		#pragma region RenderPassInfo
-		VkRenderPassCreateInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = 1;
-		renderPassInfo.pAttachments = &colorAttachment;
-		renderPassInfo.subpassCount = 1;
-		renderPassInfo.pSubpasses = &subpass;
 
-		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &dependency;
+			std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+
+			VkRenderPassCreateInfo renderPassInfo{};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+			renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			renderPassInfo.pAttachments = attachments.data();
+			renderPassInfo.subpassCount = 1;
+			renderPassInfo.pSubpasses = &subpass;
+			renderPassInfo.dependencyCount = 1;
+			renderPassInfo.pDependencies = &dependency;
 		#pragma endregion
 
 		if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
@@ -983,9 +1005,23 @@ void VulkanCore::SetWindowSize(int width, int height)
 		multisampling.alphaToOneEnable = VK_FALSE; // Optional
 #pragma endregion
 
-		//need to implement...
 		#pragma region Depth and Stencil Testing
-	//VkPipelineDepthStencilStateCreateInfo stencilInfo{};
+			VkPipelineDepthStencilStateCreateInfo depthStencil{};
+			depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+			//If new fragments should be compared based on depth - then discarded
+			depthStencil.depthTestEnable = VK_TRUE;
+			//If the new depth of fragments that pass should be written
+			depthStencil.depthWriteEnable = VK_TRUE;
+			//Lower depth = closer, so new frags should be less
+			depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+			//Only keep frags within certain range 
+			depthStencil.depthBoundsTestEnable = VK_FALSE;
+			depthStencil.minDepthBounds = 0.0f; // Optional
+			depthStencil.maxDepthBounds = 1.0f; // Optional
+			//If using this check to make sure that HasStencilComponent == true
+			depthStencil.stencilTestEnable = VK_FALSE;
+			depthStencil.front = {}; // Optional
+			depthStencil.back = {}; // Optional
 		#pragma endregion
 
 		#pragma region Color Blending
@@ -1048,6 +1084,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 		pipelineInfo.pDepthStencilState = nullptr; // Optional
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = &dynamicState;
+		pipelineInfo.pDepthStencilState = &depthStencil;
 
 		pipelineInfo.layout = pipelineLayout;
 
@@ -1081,13 +1118,14 @@ void VulkanCore::SetWindowSize(int width, int height)
 		//Iterate through the image views and create framebuffers from them
 		for (size_t i = 0; i < swapChainImageViews.size(); i++)
 		{
-			VkImageView attachments[] = { swapChainImageViews.at(i) };
+			std::array<VkImageView, 2> attachments = {swapChainImageViews[i],depthImageView};
 
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 			framebufferInfo.renderPass = renderPass;
-			framebufferInfo.attachmentCount = 1;
-			framebufferInfo.pAttachments = attachments;
+			//Only need 1 depth due to the fact that only 1 subpass in running at a time
+			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebufferInfo.pAttachments = attachments.data();
 			framebufferInfo.width = swapChainExtent.width;
 			framebufferInfo.height = swapChainExtent.height;
 			framebufferInfo.layers = 1;
@@ -1196,9 +1234,12 @@ void VulkanCore::SetWindowSize(int width, int height)
 		renderPassInfo.renderArea.extent = swapChainExtent;
 
 		//Based on VK_ATTACHMENT_LOAD_OP_CLEAR in render pass
-		VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-		renderPassInfo.clearValueCount = 1;
-		renderPassInfo.pClearValues = &clearColor;
+		//Must be in the same order of attachments
+		std::array<VkClearValue, 2> clearValues{};
+		clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+		clearValues[1].depthStencil = { 1.0f, 0 };
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassInfo.pClearValues = clearValues.data();
 
 		//Change this if commands will be exacuted from secondary cmd buffers
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -1721,10 +1762,10 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 	void VulkanCore::CreateTextureImageView()
 	{
-		textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+		textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 
-	VkImageView VulkanCore::CreateImageView(VkImage image, VkFormat format)
+	VkImageView VulkanCore::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
 	{
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -1738,7 +1779,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 		viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
 		viewInfo.format = format;
-		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		viewInfo.subresourceRange.aspectMask = aspectFlags;
 		viewInfo.subresourceRange.baseMipLevel = 0;
 		viewInfo.subresourceRange.levelCount = 1;
 		viewInfo.subresourceRange.baseArrayLayer = 0;
@@ -1788,6 +1829,46 @@ void VulkanCore::SetWindowSize(int width, int height)
 		{
 			throw std::runtime_error("failed to create texture sampler!");
 		}
+	}
+#pragma endregion
+
+#pragma region Depth
+
+	void VulkanCore::CreateDepthResources()
+	{
+		VkFormat depthFormat = FindDepthFormat();
+		CreateImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+		depthImageView = CreateImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+	}
+
+	VkFormat VulkanCore::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+	{
+		for (VkFormat format : candidates) 
+		{
+			VkFormatProperties props;
+			vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
+
+			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) 
+			{
+				return format;
+			}
+			else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) 
+			{
+				return format;
+			}
+		}
+
+		throw std::runtime_error("failed to find supported format!");
+	}
+
+	VkFormat VulkanCore::FindDepthFormat()
+	{
+		return FindSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+	}
+
+	bool VulkanCore::HasStencilComponent(VkFormat format) 
+	{
+		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 	}
 
 #pragma endregion
