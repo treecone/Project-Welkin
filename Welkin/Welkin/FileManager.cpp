@@ -53,6 +53,34 @@ FileManager::~FileManager()
     }
 }
 
+void FileManager::LoadAllModels()
+{
+    std::string path = "Models/";
+    std::string ext = { ".obj" };
+    for (auto& entity : fs::recursive_directory_iterator(path))
+    {
+        std::string fileName = entity.path().filename().string();
+        if (fs::is_regular_file(entity))
+        {
+
+        }
+    }
+}
+
+void FileManager::LoadAllTexture()
+{
+    std::string path = "Textures/";
+    std::string ext = { ".png" };
+    for (auto& entity : fs::recursive_directory_iterator(path))
+    {
+        std::string fileName = entity.path().filename().string();
+        if (fs::is_regular_file(entity))
+        {
+            //allTextures.push_back(stbi_load(entity.path().c_str(), 1024, 1024, ))
+        }
+    }
+}
+
 std::vector<char> FileManager::ReadFile(const std::string& filename)
 {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
