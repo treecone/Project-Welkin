@@ -1,37 +1,59 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "Helper.h"
-#include<map>
+#include <map>
 #include <filesystem>
 #include <stb_image.h>
 #include <tiny_obj_loader.h>
 #include <vulkan/vulkan.h>
 #include <fstream>
+#include <unordered_map>
+#include <vector>
+
+#include "Vertex.h"
+#include "Helper.h"
+#include "Mesh.h"
+
 
 namespace fs = std::filesystem;
 
-struct imageContainer
-{
-	stbi_uc* image;
-	int texWidth, texHeight, texChannels;
 
-	~imageContainer()
-	{
-
-	}
-};
 
 class FileManager
 {
 public:
 	void Init(VkDevice* device);
-	std::map<std::string, VkShaderModule> allShaders;
-	std::vector<imageContainer>  allTextures;
+	std::unordered_map<std::string, VkShaderModule> allShaders;
 	void LoadAllShaders(VkDevice* logicalDevice);
-	void LoadAllModels();
 	void LoadAllTexture();
 	~FileManager();
+
+	#pragma region Models
+	void LoadAllModels();
+	std::unordered_map<std::string, Mesh> allMeshes; //TODO ask caden
+	#pragma endregion
+
+
+	#pragma region Textures
+
+	struct ImageContainer
+	{
+		stbi_uc* image;
+		int texWidth, texHeight, texChannels;
+
+		~ImageContainer()
+		{
+			delete image;
+			image = nullptr;
+		}
+	};
+
+	std::vector<ImageContainer>  allTextures;
+	#pragma endregion
+
+
+	
+
 
 private:
 	VkDevice* device;

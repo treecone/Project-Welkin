@@ -3,9 +3,28 @@
 void FileManager::Init(VkDevice* device)
 {
     Helper::Cout("File Manager", true);
-    this->device = device;
+    
+    try
+    {
+        this->device = device;
+    }
+    catch (const std::exception& ex)
+    {
+        std::cout << ex.what() << std::endl;
+    }
+
     LoadAllShaders(device);
 }
+
+FileManager::~FileManager()
+{
+    for (const auto& shaderFile : allShaders)
+    {
+        vkDestroyShaderModule(*device, shaderFile.second, nullptr);
+    }
+}
+
+#pragma region Shaders
 
 void FileManager::LoadAllShaders(VkDevice* logicalDevice)
 {
@@ -21,7 +40,7 @@ void FileManager::LoadAllShaders(VkDevice* logicalDevice)
         {
             if (entity.path().extension() == ext)
             {
-                allShaders.insert({fileName, CreateShaderModule(ReadFile(path + fileName), logicalDevice)});
+                allShaders.insert({ fileName, CreateShaderModule(ReadFile(path + fileName), logicalDevice) });
                 Helper::Cout("- Loaded Shader: " + fileName);
             }
         }
@@ -45,42 +64,6 @@ VkShaderModule FileManager::CreateShaderModule(const std::vector<char>& shaderCo
     return shaderModule;
 }
 
-FileManager::~FileManager()
-{
-    for (const auto& shaderFile : allShaders)
-    {
-        vkDestroyShaderModule(*device, shaderFile.second, nullptr);
-    }
-}
-
-void FileManager::LoadAllModels()
-{
-    std::string path = "Models/";
-    std::string ext = { ".obj" };
-    for (auto& entity : fs::recursive_directory_iterator(path))
-    {
-        std::string fileName = entity.path().filename().string();
-        if (fs::is_regular_file(entity))
-        {
-
-        }
-    }
-}
-
-void FileManager::LoadAllTexture()
-{
-    std::string path = "Textures/";
-    std::string ext = { ".png" };
-    for (auto& entity : fs::recursive_directory_iterator(path))
-    {
-        std::string fileName = entity.path().filename().string();
-        if (fs::is_regular_file(entity))
-        {
-            //allTextures.push_back(stbi_load(entity.path().c_str(), 1024, 1024, ))
-        }
-    }
-}
-
 std::vector<char> FileManager::ReadFile(const std::string& filename)
 {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -99,3 +82,48 @@ std::vector<char> FileManager::ReadFile(const std::string& filename)
 
     return buffer;
 }
+
+#pragma endregion
+
+
+#pragma region Models
+
+void FileManager::LoadAllModels()
+{
+    std::string path = "Models/";
+    std::string ext = { ".obj" };
+    for (auto& entity : fs::recursive_directory_iterator(path))
+    {
+        std::string fileName = entity.path().filename().string();
+        if (fs::is_regular_file(entity))
+        {
+            pair<string, Mesh> newMesh (fileName, Mesh(entity.path().string(), device));
+            allMeshes.insert(newMesh);
+        }
+    }
+}
+
+#pragma endregion
+
+
+#pragma region Textures
+
+void FileManager::LoadAllTexture()
+{
+    std::string path = "Textures/";
+    std::string ext = { ".png" };
+    for (auto& entity : fs::recursive_directory_iterator(path))
+    {
+        std::string fileName = entity.path().filename().string();
+        if (fs::is_regular_file(entity))
+        {
+            //allTextures.push_back(stbi_load(entity.path().c_str(), 1024, 1024, ))
+        }
+    }
+}
+
+#pragma endregion
+
+
+
+
