@@ -14,11 +14,11 @@
 #include <array>
 #include "FileManager.h"
 #include <string>
+#include "Vertex.h"
 #include <algorithm>
 #include <optional>
 #include "Helper.h"
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/hash.hpp>
 
 const short MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -243,22 +243,10 @@ private:
 
 #pragma region Model
 	const std::string MODEL_PATH = "Models/viking_room.obj";
-	void LoadModel();
 #pragma endregion
 
 
 };
-
-
-namespace std {
-	template<> struct hash<VulkanCore::Vertex> {
-		size_t operator()(VulkanCore::Vertex const& vertex) const {
-			return ((hash<glm::vec3>()(vertex.pos) ^
-				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
-				(hash<glm::vec2>()(vertex.texCoord) << 1);
-		}
-	};
-}
 
 /*
 Notes:

@@ -4,12 +4,16 @@
 #include "VulkanCore.h"
 #include "FileManager.h"
 
+#include "GameObject.h"
+
 class Game
 {
 public:
 	Game();
 	~Game();
 	void Update();
+
+	vector<GameObject*> allGameobjects;
 
 private:
 	unsigned int WIDTH = 1024;
@@ -20,5 +24,6 @@ private:
 	FileManager* fileManager;
 
 	void Init();
+	void CreateObjects();
 };
 

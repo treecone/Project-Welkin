@@ -13,6 +13,11 @@ void FileManager::Init(VkDevice* device)
         std::cout << ex.what() << std::endl;
     }
 
+    LoadAllModels();
+    LoadAllTextures(device);
+    CreateMaterial("Brick");
+    CreateMaterial("Viking");
+
     LoadAllShaders(device);
 }
 
@@ -22,13 +27,23 @@ FileManager::~FileManager()
     {
         vkDestroyShaderModule(*device, shaderFile.second, nullptr);
     }
+
+    allMeshes.clear();
+
+    for (auto& material : allMaterials)
+    {
+        delete material;
+        material = nullptr;
+    }
+
+    allTextures.clear();
 }
 
 #pragma region Shaders
 
 void FileManager::LoadAllShaders(VkDevice* logicalDevice)
 {
-    Helper::Cout("Loading Shaders");
+    Helper::Cout("-Loading Shaders");
     Helper::Cout("[Note] Maybe make it so it doesn't load all shaders?");
 
     std::string path = "Shaders/";
@@ -41,7 +56,7 @@ void FileManager::LoadAllShaders(VkDevice* logicalDevice)
             if (entity.path().extension() == ext)
             {
                 allShaders.insert({ fileName, CreateShaderModule(ReadFile(path + fileName), logicalDevice) });
-                Helper::Cout("- Loaded Shader: " + fileName);
+                Helper::Cout("-- Loaded Shader: " + fileName);
             }
         }
     }
@@ -85,7 +100,6 @@ std::vector<char> FileManager::ReadFile(const std::string& filename)
 
 #pragma endregion
 
-
 #pragma region Models
 
 void FileManager::LoadAllModels()
@@ -97,33 +111,96 @@ void FileManager::LoadAllModels()
         std::string fileName = entity.path().filename().string();
         if (fs::is_regular_file(entity))
         {
-            pair<string, Mesh> newMesh (fileName, Mesh(entity.path().string(), device));
+            pair<string, Mesh*> newMesh (fileName, new Mesh(entity.path().string(), device));
             allMeshes.insert(newMesh);
         }
     }
 }
 
-#pragma endregion
-
-
-#pragma region Textures
-
-void FileManager::LoadAllTexture()
+Mesh* FileManager::GetModel(string name)
 {
-    std::string path = "Textures/";
-    std::string ext = { ".png" };
-    for (auto& entity : fs::recursive_directory_iterator(path))
-    {
-        std::string fileName = entity.path().filename().string();
-        if (fs::is_regular_file(entity))
-        {
-            //allTextures.push_back(stbi_load(entity.path().c_str(), 1024, 1024, ))
-        }
-    }
+    return allMeshes.find(name)->second;
 }
 
 #pragma endregion
 
+#pragma region Materials
+
+//First load all textures, then create the materials with pointers to the appropriate textures
+
+void FileManager::LoadAllTextures(VkDevice* logicalDevice)
+{
+    Helper::Cout("-Loading all textures");
+
+    string path = "Materials";
+    string ext = { ".png" };
+    for (auto& entity : fs::recursive_directory_iterator(path))
+    {
+        string fileName = entity.path().filename().string();
+        if (fs::is_regular_file(entity))
+        {
+            if (entity.path().extension() == ext)
+            {
+                pair<string, Texture*> newTex(fileName, new Texture(path));
+                allTextures.insert(newTex);
+                Helper::Cout("-- Loaded Texture: " + fileName);
+            }
+        }
+    }
+}
+
+void FileManager::CreateMaterial(string folderMaterialName)
+{
+    int numberOfTextures;
+    string fileName;
+
+    string path = "Materials/" + folderMaterialName;
+    string ext = { ".png" };
+    for (auto& entity : fs::directory_iterator(path))
+    {
+        if(fileName == "")
+            fileName = entity.path().filename().string();
+
+        if (fs::is_regular_file(entity))
+        {
+            if (entity.path().extension() == ext)
+            {
+                numberOfTextures++;
+            }
+        }
+    }
+
+    //Remove first letter of the name
+    fileName.erase(0, 1);
+
+    Texture* foundTexColor = allTextures.find("c" + fileName)->second;
+    if (foundTexColor == nullptr)
+    {
+        throw std::runtime_error("Found no color texture for " + fileName);
+    }
+
+    if (numberOfTextures > 2)
+    {
+        Helper::Cout("-Creating PBR Material: " + fileName);
+
+        //PBR material
+        throw std::runtime_error("Created Material with no textures in it!");
+
+        Texture* foundTexRoughness = allTextures.find("r" + fileName)->second;
+        Texture* foundTexAO = allTextures.find("a" + fileName)->second;
+        Texture* foundTexDepth = allTextures.find("d" + fileName)->second;
+        Texture* foundTexNormal = allTextures.find("n" + fileName)->second;
 
 
+        allMaterials.push_back(new PBRMaterial(foundTexColor, fileName, this->device, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal));
+    }
+    else if (numberOfTextures > 0)
+    {
+        Helper::Cout("-Creating Material: " + fileName);
 
+        allMaterials.push_back(new Material(foundTexColor, fileName, this->device));
+    }
+
+}
+
+#pragma endregion

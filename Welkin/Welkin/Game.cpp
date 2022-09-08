@@ -21,6 +21,16 @@ Game::~Game()
 	delete fileManager;
 	delete vCore;
 	delete mainWindow;
+
+	for (int i = 0; i < allGameobjects.size(); i++)
+	{
+		delete allGameobjects[i];
+	}
+}
+
+void Game::CreateObjects()
+{
+	allGameobjects.push_back(new GameObject(fileManager->GetModel("viking_room"), fileManager->GetMaterial("Viking")));
 }
 
 void Game::Update()
