@@ -14,15 +14,19 @@ void Game::Init()
 	//Init's the vulkan core
 	vCore = new VulkanCore(mainWindow->GetWindow(), fileManager);
 
+	Helper::Cout("Game Initalization", true);
 
 	//Camera
 	const float nearPlane = 0.1f;
 	const float farPlane = 1000;
-	mainCamera = unique_ptr<Camera>(new Camera(3.0f, 1.0f, WIDTH / HEIGHT, nearPlane, farPlane));
 
-	Helper::Cout("Game Loop", true);
+
+	mainCamera = unique_ptr<Camera>(new Camera(3.0f, 1.0f, (float)WIDTH / (float)HEIGHT, nearPlane, farPlane));
 
 	CreateObject("Viking Room", "VikingRoom", "VikingRoom");
+
+	Helper::Cout("Game Loop", true);
+	Update();
 }
 
 Game::~Game()
@@ -43,8 +47,6 @@ void Game::CreateObject(string objName, string modelName, string materialFolderN
 	GameObject* newObj = new GameObject(objName, fileManager->FindMesh(modelName), fileManager->FindMaterial(materialFolderName));
 	vector<GameObject*>::iterator location = upper_bound(gameObjects.begin(), gameObjects.end(), newObj);
 	gameObjects.insert(location, newObj);
-
-	Helper::Cout("[GameObject] Created " + newObj->name);
 
 	//Technically shouldn't ever need to call this...
 	if (sort)
@@ -67,7 +69,7 @@ void Game::Update()
 		}
 
 		#pragma region Getting FPS
-			deltaSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - startTime).count();
+			deltaSeconds = (unsigned long)std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - startTime).count();
 
 			if (deltaSeconds - lastDeltaSeconds > 0)
 			{
@@ -78,7 +80,7 @@ void Game::Update()
 			framesElapsed++;
 		#pragma endregion
 
-		mainCamera->Update(deltaSeconds);
+		mainCamera->Update((float)deltaSeconds);
 
 	}
 

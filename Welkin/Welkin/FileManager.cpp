@@ -19,9 +19,9 @@ void FileManager::Init(VkDevice* device)
     }
 
     LoadAllModels();
-    LoadAllTextures(device);
+    //LoadAllTextures(device);
     //CreateMaterial("Brick");
-    CreateMaterial("VikingRoom");
+    CreateMaterial("VikingRoom");;
 
     LoadAllShaders(device);
 }
@@ -35,6 +35,7 @@ FileManager::~FileManager()
 
     allMaterials.clear();
     allTextures.clear();
+    allMeshes.clear();
 }
 
 Mesh* FileManager::FindMesh(string name)
@@ -53,12 +54,12 @@ Mesh* FileManager::FindMesh(string name)
 
 Material* FileManager::FindMaterial(string name)
 {
-    unordered_map<string, Material*>::const_iterator iter = allMaterials.find(name);
+    unordered_map<string, unique_ptr<Material>>::const_iterator iter = allMaterials.find(name);
 
     if (iter != allMaterials.end())
     {
         // iter is item pair in the map. The value will be accessible as `iter->second`.
-        return iter->second;
+        return iter->second.get();
     }
 
     Helper::Cout("[Warning] Couldn't find material: " + name);
@@ -188,47 +189,93 @@ void FileManager::LoadAllTextures(VkDevice* logicalDevice)
     }
 }
 
-//TODO Make it so CreateMaterial loads texture while adding to material, right now there is a uneccesary loop 
-
-void FileManager::CreateMaterial(string folderMaterialName)
+//Returns first raw file name and number of textures found
+std::pair<string, unsigned short> FileManager::LoadTexturesFromFolder(string folderName)
 {
-    Helper::Cout("");
-    Helper::Cout("-Loading Material for " + folderMaterialName);
-
+    Helper::Cout("-Loading all textures from folder: " + folderName);
     int numberOfTextures = 0;
-    string fileName;
+    string firstFileName = "";
 
-    string path = "Materials/" + folderMaterialName;
+    string path = "Materials/" + folderName;
     string ext = { ".png" };
     for (auto& entity : fs::directory_iterator(path))
     {
-        if (fileName == "")
-        {
-            fileName = entity.path().filename().string();
-            size_t lastIndex = fileName.find_last_of(".");
-            fileName = fileName.substr(0, lastIndex);
-        }
-
+        string fileName = entity.path().filename().string();
+        size_t lastIndex = fileName.find_last_of(".");
+        string rawName = fileName.substr(0, lastIndex);
         if (fs::is_regular_file(entity))
         {
             if (entity.path().extension() == ext)
             {
+                pair<string, Texture*> newTex(rawName, new Texture(entity.path().string()));
+                allTextures.insert(newTex);
+                Helper::Cout("-- Loaded Texture: " + fileName);
+
                 numberOfTextures++;
+                if (firstFileName == "")
+                {
+                    firstFileName = rawName;
+                }
             }
         }
     }
 
-    //Remove first letter of the name
-    fileName.erase(0, 1);
+    return std::pair<string, unsigned short>(firstFileName, numberOfTextures);
+}
 
-    Texture* foundTexColor = allTextures.find("c" + fileName)->second;
-    if (foundTexColor == nullptr)
+void FileManager::CreateMaterial(string folderMaterialName, bool loadTexturesFromFolder)
+{
+    Helper::Cout("");
+    Helper::Cout("Creating Material for " + folderMaterialName);
+
+    string fileName = "";
+    int numberOfTextures = 0;
+
+    if (loadTexturesFromFolder)
     {
-        throw std::runtime_error("Found no color texture for " + fileName);
+        std::pair<string, unsigned short> loadedTextures = LoadTexturesFromFolder(folderMaterialName);
+        fileName = loadedTextures.first;
+        numberOfTextures = loadedTextures.second;
+    }
+    else
+    {
+        //Find how many textures so we can create the right type of material
+        //Assuming there are only two types, normal (1-2) or PBR (> 2)
+
+        string path = "Materials/" + folderMaterialName;
+        string ext = { ".png" };
+        for (auto& entity : fs::directory_iterator(path))
+        {
+            if (fileName == "")
+            {
+                fileName = entity.path().filename().string();
+                size_t lastIndex = fileName.find_last_of(".");
+                fileName = fileName.substr(0, lastIndex);
+            }
+
+            if (fs::is_regular_file(entity))
+            {
+                if (entity.path().extension() == ext)
+                {
+                    numberOfTextures++;
+                }
+            }
+        }
+
     }
 
-    Helper::Cout("-- Loaded Texture for Material: " + fileName);
 
+    
+    //Remove first letter of the name to get the generic name of all the textures
+    fileName.erase(0, 1);
+
+    Texture* foundColorTextureName = allTextures.at("c" + fileName).get();
+
+    if (foundColorTextureName == nullptr)
+    {
+        Helper::Warning("Found no color texture for " + fileName + " --Skipping");
+        return;
+    }
 
     if (numberOfTextures > 2)
     {
@@ -237,19 +284,23 @@ void FileManager::CreateMaterial(string folderMaterialName)
         //PBR material
         throw std::runtime_error("Created Material with no textures in it!");
 
-        Texture* foundTexRoughness = allTextures.find("r" + fileName)->second;
-        Texture* foundTexAO = allTextures.find("a" + fileName)->second;
-        Texture* foundTexDepth = allTextures.find("d" + fileName)->second;
-        Texture* foundTexNormal = allTextures.find("n" + fileName)->second;
+        Texture* foundTexRoughness = allTextures.at("r" + fileName).get();
+        Texture* foundTexAO = allTextures.at("a" + fileName).get();
+        Texture* foundTexDepth = allTextures.at("d" + fileName).get();
+        Texture* foundTexNormal = allTextures.at("n" + fileName).get();
 
-        pair<string, Material*> newMaterial(fileName, new PBRMaterial(foundTexColor, fileName, this->device, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal));
+        pair<string, Material*> newMaterial(fileName, new PBRMaterial(foundColorTextureName, fileName, this->device, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal));
         allMaterials.insert(newMaterial);
     }
     else if (numberOfTextures > 0)
     {
-        Helper::Cout("-Created [Normal] Material: " + fileName);
-        pair<string, Material*> newMaterial(fileName, new Material(foundTexColor, fileName, this->device));
+        pair<string, Material*> newMaterial(fileName, new Material(foundColorTextureName, fileName, this->device));
         allMaterials.insert(newMaterial);
+        Helper::Cout("Created [Normal] Material: " + fileName);
+    }
+    else
+    {
+        Helper::Warning("Found no textures to create " + fileName + " material!");
     }
 
 }

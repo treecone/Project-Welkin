@@ -35,7 +35,7 @@ void VulkanCore::InitVulkan()
 	fm->Init(&this->device);
 
 	//Rendering Stuff
-	Helper::Cout("Rendering", true);
+	Helper::Cout("Pipeline and Passes", true);
 }
 
 VkDevice* VulkanCore::GetLogicalDevice()
@@ -76,7 +76,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 			appInfo.pEngineName = "Welkin Engine";
 			appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-			appInfo.apiVersion = VK_API_VERSION_1_3;
+			appInfo.apiVersion = VK_API_VERSION_1_0;
 		#pragma endregion
 
 		//Tells vulkan what global extensions and validation layers we want to use
@@ -126,7 +126,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 		std::vector<VkExtensionProperties> extensions(extensionCount);
 		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
-		Helper::Cout("Avaiable Extensions Checked!");
+		Helper::Cout("Avaiable Extensions Checked");
 	}
 
 	//Checks if all the requested validation layers (specified in the stuct) are avaiable
@@ -154,7 +154,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 				if (!layerFound)
 				{
-					Helper::Cout("[Warning] Did not find all requested Validation Layers!");
+					Helper::Warning("Did not find all requested Validation Layers!");
 					return false;
 				}
 			}
@@ -233,7 +233,9 @@ void VulkanCore::SetWindowSize(int width, int height)
 		}
 
 		if (indices.transferFamily != indices.graphicsFamily)
+		{
 			score++;
+		}
 
 		return score;
 	}
@@ -248,7 +250,8 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
-		for (const auto& extension : availableExtensions) {
+		for (const auto& extension : availableExtensions) 
+		{
 			requiredExtensions.erase(extension.extensionName);
 		}
 
@@ -492,15 +495,12 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		Helper::Cout("Created Swap Chain!");
 
-		#pragma region Retrieving the handles to the image views inside 
-			vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
-			swapChainImages.resize(imageCount);
+		vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+		swapChainImages.resize(imageCount);
+		vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
 
-			vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
-		#pragma endregion
-
-			swapChainImageFormat = surfaceFormat.format;
-			swapChainExtent = extent;
+		swapChainImageFormat = surfaceFormat.format;
+		swapChainExtent = extent;
 	}
 
 	#pragma region SwapChainDetails
@@ -645,3 +645,6 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 #pragma endregion
 
+#pragma region Pipeline/Passes
+
+#pragma endregion

@@ -6,14 +6,19 @@ void Helper::Cout(std::string message, bool header)
 #ifdef _DEBUG
 	if (header)
 	{
-		std::cout << std::endl;
-		std::cout << "---------------" + message + "---------------" << std::endl;
-		std::cout << std::endl;
+		std::cout << "\n --------------- " + message + " --------------- \n" << std::endl;
 	}
 	else
 	{
 		std::cout <<" " + message << std::endl;
 	}
+#endif
+}
+
+void Helper::Warning(std::string message)
+{
+#ifdef _DEBUG
+	std::cout << "\n[[WARNING]]: " + message + "\n" << std::endl;
 #endif
 }
 

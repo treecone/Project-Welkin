@@ -5,11 +5,11 @@ GameObject::GameObject(string objectName, Mesh* mesh, Material* material):
 {
 	if (objectName != "" && mesh != nullptr && material != nullptr)
 	{
-		Helper::Cout("[" + objectName + "] Created!");
+		Helper::Cout("[" + objectName + "] Gameobject Created!");
 	}
 	else
 	{
-		Helper::Cout("[" + objectName + "] is incomplete!");
+		Helper::Warning("[" + objectName + "] Gameobject is incomplete!");
 	}
 }
 
