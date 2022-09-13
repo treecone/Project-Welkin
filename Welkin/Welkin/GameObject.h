@@ -1,15 +1,13 @@
 #pragma once
-
 #include "Mesh.h"
 #include "Camera.h"
-#include <vulkan/vulkan.h>
 #include "Transform.h"
 #include "Material.h"
 
 class GameObject
 {
 public:
-	GameObject(Mesh* mesh, Material* material);
+	GameObject(string name, Mesh* mesh, Material* material);
 
 	Mesh* GetMesh();
 	Material* GetMaterial();
@@ -19,10 +17,16 @@ public:
 
 	void Draw(VkDevice* device, Camera* camera);
 
+	string name;
+
+	bool operator < (const GameObject& str) const
+	{
+		return (this->material->GetMaterialName() < str.material->GetMaterialName());
+	}
+
 private:
 
 	Mesh* mesh;
 	Material* material;
 	Transform transform;
 };
-

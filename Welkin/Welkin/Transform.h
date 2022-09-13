@@ -30,7 +30,7 @@ public:
 
 	mat4 GetWorldMatrix();
 	mat4 GetWorldInverseTransposeMatrix();
-
+	/*
 	void AddChild(Transform* child, bool makeChildRelative);
 	void RemoveChild(Transform* child, bool applyParentTransform);
 	void SetParent(Transform* newParent, bool makeChildRelative);
@@ -38,7 +38,7 @@ public:
 	Transform* GetChild(unsigned int index);
 	int IndexOfChild(Transform* child);
 	unsigned int ChildCount();
-
+	*/
 private:
 	//Hierarchy
 	Transform* parent;

@@ -1,16 +1,20 @@
 #version 450
 
-//layout(location = 0) modifier specifies the index of the framebuffer
-//location and pairs the var, so the names dont need to match in the vert shader
+//IN
+layout(location = 0) in vec2 inUV;
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec3 inTangent;
+layout(location = 3) in vec3 inWorldPos;
+
 layout(binding = 1) uniform sampler2D texSampler;
 
+//OUT
 layout(location = 0) out vec4 outColor;
 
-layout(location = 1) in vec2 fragTexCoord;
-layout(location = 0) in vec3 fragColor;
+
 
 
 void main() 
 {
-    outColor = texture(texSampler, fragTexCoord);
+    outColor = vec4(inNormal, 1.0);
 }

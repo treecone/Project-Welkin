@@ -1,8 +1,16 @@
 #include "GameObject.h"
 
-GameObject::GameObject(Mesh* mesh, Material* material)
+GameObject::GameObject(string objectName, Mesh* mesh, Material* material):
+	name{ objectName }, mesh{mesh}, material {material}
 {
-
+	if (objectName != "" && mesh != nullptr && material != nullptr)
+	{
+		Helper::Cout("[" + objectName + "] Created!");
+	}
+	else
+	{
+		Helper::Cout("[" + objectName + "] is incomplete!");
+	}
 }
 
 Mesh* GameObject::GetMesh()

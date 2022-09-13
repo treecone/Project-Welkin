@@ -116,6 +116,15 @@ void Transform::UpdateMatrices()
 	}
 }
 
+void Transform::MarkChildTransformsDirty()
+{
+	for (auto child : children)
+	{
+		child->matricesDirty = true;
+		child->MarkChildTransformsDirty();
+	}
+}
+
 vec3 Transform::QuaterionToEuler(glm::quat quaterion)
 {
 	return glm::eulerAngles(quaterion);

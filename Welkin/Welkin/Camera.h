@@ -1,14 +1,17 @@
 #pragma once
 #include "Transform.h"
-#include <glm/glm.hpp>
+#include "Helper.h"
 
 class Camera
 {
-	Camera(Transform transform, float moveSpeed, float mouseLookSpeed, float aspectRatio);
+public:
+	Camera(float moveSpeed, float mouseLookSpeed, float aspectRatio, float nearPlane, float farPlane);
 	~Camera();
 
+	void SetFOV(float fov) { FOV = fov; };
 	void Update(float dt);
 	void UpdateViewMatrix();
+	void UpdateViewMatrix(Transform* objToLookAt);
 	void UpdateProjectionMatrix(float aspectRatio);
 
 	glm::mat4 GetView() { return viewMatrix; }
@@ -20,6 +23,9 @@ private:
 
 	glm::mat4 viewMatrix;
 	glm::mat4 projMatrix;
+	float FOV;
+	float nearPlane;
+	float farPlane;
 
 	Transform transform;
 

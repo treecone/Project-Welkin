@@ -3,13 +3,13 @@
 #include <string>
 #include <map>
 #include <filesystem>
-#include <stb_image.h>
 #include <tiny_obj_loader.h>
 #include <vulkan/vulkan.h>
 #include <fstream>
+#include "Texture.h"
 #include <unordered_map>
+#include <memory>
 #include <vector>
-
 #include "Vertex.h"
 #include "Material.h"
 #include "PBRMaterial.h"
@@ -18,56 +18,35 @@
 
 namespace fs = std::filesystem;
 
-struct Texture
-{
-	stbi_uc* pixels;
-	int texWidth, texHeight, texChannels;
-	VkDeviceSize imageSize;
-
-	Texture(string PATH)
-	{
-		stbi_uc* pixels = stbi_load(PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-		VkDeviceSize imageSize = texWidth * texHeight * 4;
-
-		if (!pixels)
-		{
-			throw std::runtime_error("failed to load" + PATH + " texture image!");
-		}
-	}
-
-	~Texture()
-	{
-		delete pixels;
-		pixels = nullptr;
-	}
-};
-
 class FileManager
 {
 public:
-	void Init(VkDevice* device);
-	std::unordered_map<std::string, VkShaderModule> allShaders;
-	void LoadAllShaders(VkDevice* logicalDevice);
+	FileManager();
 	~FileManager();
 
+	void Init(VkDevice* device);
 
-	#pragma region Models
-	void LoadAllModels();
-	Mesh* GetModel(string name);
-	std::unordered_map<std::string, Mesh*> allMeshes;
-	#pragma endregion
 
-	#pragma region Materials
-	std::vector<Material*> allMaterials;
-	std::unordered_map<string, Texture*> allTextures;
-	void CreateMaterial(string folderMaterialName);
-	#pragma endregion
-
+	Mesh* FindMesh(string name);
+	Material* FindMaterial(string name);
+	VkShaderModule FindShaderModule(string name);
 
 
 private:
+
 	VkDevice* device;
-	static std::vector<char> ReadFile(const std::string& filename);
-	void LoadAllTextures(VkDevice* device);
+
+	void LoadAllTextures(VkDevice* logicalDevice);
+	void LoadAllModels();
+	void CreateMaterial(string folderMaterialName);
+
+	void LoadAllShaders(VkDevice* logicalDevice);
 	VkShaderModule CreateShaderModule(const std::vector<char>& shaderCode, VkDevice* device);
+	static std::vector<char> ReadFile(const std::string& filename);
+
+	//TODO switch these to unique pointers 
+	std::unordered_map<string, unique_ptr<Mesh>> allMeshes;
+	std::unordered_map<std::string, VkShaderModule> allShaders;
+	std::unordered_map<string, Material*> allMaterials;
+	std::unordered_map<string, Texture*> allTextures;
 };

@@ -1,16 +1,17 @@
 #pragma once
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-#include "VulkanCore.h"
-#include "FileManager.h"
+#include <vulkan/vulkan.h>
 #include "Helper.h"
+#include "Texture.h"
+#include <string>
+
 class Material
 {
 public:
-	Material(Texture* color, string materialName, VkDevice* device);
+	Material(Texture* color, std::string materialName, VkDevice* device);
 	virtual void CreateBuffers(VkDevice* device);
+	std::string GetMaterialName() { return this->materialName; };
 	virtual ~Material();
-private:
+protected:
 	Texture* tex_Color;
-	string materialName;
+	std::string materialName;
 };

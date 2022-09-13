@@ -2,6 +2,7 @@
 
 #define GLFW_INCLUDE_VULKAN
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_RADIANS
 
 #include <GLFW/glfw3.h>
@@ -18,7 +19,6 @@
 #include <algorithm>
 #include <optional>
 #include "Helper.h"
-#define GLM_ENABLE_EXPERIMENTAL
 
 const short MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -29,11 +29,10 @@ public:
 
 	VulkanCore(GLFWwindow* window, FileManager* fm);
 	~VulkanCore();
-	void DrawFrame();
 	void SetWindowSize(int width, int height);
 	VkDevice* GetLogicalDevice();
 
-	uint32_t currentFrame = 0;
+	unsigned short currentFrame = 0;
 
 private:
 
@@ -53,13 +52,14 @@ private:
 	//Queues ---------
 	VkQueue graphicsQueue;
 	VkQueue presentationQueue;
+	VkQueue transferQueue;
 
 	void InitVulkan();
 	void CreateInstance();
 	void CheckAvaiableExtensions();
 	bool CheckValidationLayerSupport();
 	void PickPhysicalDevice();
-	bool isDeviceSuitable(VkPhysicalDevice physicalDevice);
+	int RateDeviceSuitability(VkPhysicalDevice physicalDevice);
 	bool CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice);
 	void CreateLogicalDevice();
 
@@ -67,12 +67,14 @@ private:
 	{
 		std::optional<unsigned int> graphicsFamily;
 		std::optional<unsigned int> presentFamily;
+		std::optional<unsigned int> transferFamily;
 
 		bool isComplete()
 		{
-			return graphicsFamily.has_value() && presentFamily.has_value();
+			return graphicsFamily.has_value() && presentFamily.has_value() && transferFamily.has_value();
 		}
 	};
+
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice);
 
 	#pragma region ValidationLayers
@@ -106,8 +108,6 @@ private:
 	VkFormat swapChainImageFormat;
 	//Holds the actual resolution of the swap chain in pixels
 	VkExtent2D swapChainExtent;
-	//Frame Buffers of the VkImages in the swap chain 
-	std::vector<VkFramebuffer> swapChainFrameBuffers;
 
 
 	void CreateSurface();
@@ -116,7 +116,6 @@ private:
 	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	void CreateImageViews();
-	void CreateFramebuffers();
 	void RecreateSwapChain();
 	void CleanupSwapChain();
 
@@ -134,117 +133,6 @@ private:
 	SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice physicalDevice);
 
 #pragma endregion
-
-#pragma region Graphics Pipelines/Render Passes/Pipeline
-	
-
-	VkRenderPass renderPass;
-	VkPipelineLayout pipelineLayout;
-	VkPipeline graphicsPipeline;
-
-	//Command Stuff
-	std::vector<VkCommandBuffer> commandBuffers;
-	VkCommandPool commandPool;
-
-	//Sync Objects
-	std::vector <VkSemaphore> imageAvailableSemaphores;
-	std::vector <VkSemaphore> renderFinishedSemaphores;
-	std::vector <VkFence> inFlightFences;
-
-	bool frameBufferResized = false;
-
-	void CreateRenderPass();
-	void CreateGraphicsPipeline();
-	void CreateCommandPool();
-	void CreateCommandBuffers();
-	void CreateSyncObjects();
-	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-
-#pragma endregion
-
-#pragma region Buffers and such
-
-	VkBuffer vertexBuffer;
-	VkDeviceMemory vertexBufferMemory;
-	VkBuffer indexBuffer;
-	VkDeviceMemory indexBufferMemory;
-
-	void CreateVertexBuffer();
-	void CreateIndexBuffer();
-	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
-	std::vector<Vertex> vertices;
-	std::vector<uint32_t> indices;
-
-	//Descriptors --------------
-
-	void CreateDescriptorSetLayout();
-	void UpdateUniformBuffer(uint32_t currentImage);
-	void CreateDescriptorPool();
-	void CreateDescriptorSets();
-	void CreateUniformBuffers();
-
-
-	//Multiple ones, bc mulitple frames may be in flight at the same time 
-	std::vector<VkBuffer> uniformBuffers;
-	std::vector<VkDeviceMemory> uniformBuffersMemory;
-
-	VkDescriptorSetLayout descriptorSetLayout;
-	VkDescriptorPool descriptorPool;
-	std::vector<VkDescriptorSet> descriptorSets;
-
-	/*
-	- Allignment: (bytes)
-	-- Scalars : 4
-	-- Vec2 : 8
-	-- Vec3/4 : 16
-	-- Nested : 16
-	-- Mat4 : 16
-	*/
-
-	struct UniformBufferObject {
-		alignas (16) glm::mat4 model;
-		alignas (16) glm::mat4 view;
-		alignas (16) glm::mat4 proj;
-	};
-
-#pragma endregion
-
-#pragma region Image
-	void CreateTextureImage();
-	void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-	VkCommandBuffer BeginSingleTimeCommands();
-	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-	void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
-	void CreateTextureImageView();
-	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
-	void CreateTextureSampler();
-
-
-	VkImage textureImage;
-	VkSampler textureSampler;
-	VkDeviceMemory textureImageMemory;
-	VkImageView textureImageView;
-
-
-	VkImage depthImage;
-	VkDeviceMemory depthImageMemory;
-	VkImageView depthImageView;
-
-	void CreateDepthResources();
-	VkFormat FindDepthFormat();
-	bool HasStencilComponent(VkFormat format);
-	//Finds the correct format for the depth buffer
-	VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
-#pragma endregion
-
-#pragma region Model
-	const std::string MODEL_PATH = "Models/viking_room.obj";
-#pragma endregion
-
 
 };
 

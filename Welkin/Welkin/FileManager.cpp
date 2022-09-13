@@ -1,5 +1,10 @@
 #include "FileManager.h"
 
+FileManager::FileManager()
+{
+
+}
+
 void FileManager::Init(VkDevice* device)
 {
     Helper::Cout("File Manager", true);
@@ -15,8 +20,8 @@ void FileManager::Init(VkDevice* device)
 
     LoadAllModels();
     LoadAllTextures(device);
-    CreateMaterial("Brick");
-    CreateMaterial("Viking");
+    //CreateMaterial("Brick");
+    CreateMaterial("VikingRoom");
 
     LoadAllShaders(device);
 }
@@ -28,23 +33,59 @@ FileManager::~FileManager()
         vkDestroyShaderModule(*device, shaderFile.second, nullptr);
     }
 
-    allMeshes.clear();
-
-    for (auto& material : allMaterials)
-    {
-        delete material;
-        material = nullptr;
-    }
-
+    allMaterials.clear();
     allTextures.clear();
 }
 
+Mesh* FileManager::FindMesh(string name)
+{
+    unordered_map<string, unique_ptr<Mesh>>::const_iterator iter = allMeshes.find(name);
+
+    if (iter != allMeshes.end())
+    {
+        // iter is item pair in the map. The value will be accessible as `iter->second`.
+        return iter->second.get();
+    }
+
+    Helper::Cout("[Warning] Couldn't find mesh: " + name);
+    return nullptr;
+}
+
+Material* FileManager::FindMaterial(string name)
+{
+    unordered_map<string, Material*>::const_iterator iter = allMaterials.find(name);
+
+    if (iter != allMaterials.end())
+    {
+        // iter is item pair in the map. The value will be accessible as `iter->second`.
+        return iter->second;
+    }
+
+    Helper::Cout("[Warning] Couldn't find material: " + name);
+    return nullptr;
+}
+
+VkShaderModule FileManager::FindShaderModule(string name)
+{
+    unordered_map<string, VkShaderModule>::const_iterator iter = allShaders.find(name);
+
+    if (iter != allShaders.end())
+    {
+        // iter is item pair in the map. The value will be accessible as `iter->second`.
+        return iter->second;
+    }
+
+    throw std::runtime_error("Couldn't find shader: " + name);
+}
+
+
 #pragma region Shaders
 
+//TODO Maybe make it so it doesn't load all shaders?
 void FileManager::LoadAllShaders(VkDevice* logicalDevice)
 {
-    Helper::Cout("-Loading Shaders");
-    Helper::Cout("[Note] Maybe make it so it doesn't load all shaders?");
+    Helper::Cout("");
+    Helper::Cout("- Loading All Shaders");
 
     std::string path = "Shaders/";
     std::string ext = { ".spv" };
@@ -61,7 +102,7 @@ void FileManager::LoadAllShaders(VkDevice* logicalDevice)
         }
     }
 
-    Helper::Cout("All Shaders Loaded!");
+    Helper::Cout("- All Shaders Loaded!");
 }
 
 VkShaderModule FileManager::CreateShaderModule(const std::vector<char>& shaderCode, VkDevice* logicalDevice)
@@ -109,19 +150,15 @@ void FileManager::LoadAllModels()
     for (auto& entity : fs::recursive_directory_iterator(path))
     {
         std::string fileName = entity.path().filename().string();
+        size_t lastIndex = fileName.find_last_of(".");
+        string rawName = fileName.substr(0, lastIndex);
         if (fs::is_regular_file(entity))
         {
-            pair<string, Mesh*> newMesh (fileName, new Mesh(entity.path().string(), device));
+            pair<string, Mesh*> newMesh (rawName, new Mesh(path+fileName, device));
             allMeshes.insert(newMesh);
         }
     }
 }
-
-Mesh* FileManager::GetModel(string name)
-{
-    return allMeshes.find(name)->second;
-}
-
 #pragma endregion
 
 #pragma region Materials
@@ -132,16 +169,18 @@ void FileManager::LoadAllTextures(VkDevice* logicalDevice)
 {
     Helper::Cout("-Loading all textures");
 
-    string path = "Materials";
+    string path = "Materials/";
     string ext = { ".png" };
     for (auto& entity : fs::recursive_directory_iterator(path))
     {
         string fileName = entity.path().filename().string();
+        size_t lastIndex = fileName.find_last_of(".");
+        string rawName = fileName.substr(0, lastIndex);
         if (fs::is_regular_file(entity))
         {
             if (entity.path().extension() == ext)
             {
-                pair<string, Texture*> newTex(fileName, new Texture(path));
+                pair<string, Texture*> newTex(rawName, new Texture(entity.path().string()));
                 allTextures.insert(newTex);
                 Helper::Cout("-- Loaded Texture: " + fileName);
             }
@@ -149,17 +188,26 @@ void FileManager::LoadAllTextures(VkDevice* logicalDevice)
     }
 }
 
+//TODO Make it so CreateMaterial loads texture while adding to material, right now there is a uneccesary loop 
+
 void FileManager::CreateMaterial(string folderMaterialName)
 {
-    int numberOfTextures;
+    Helper::Cout("");
+    Helper::Cout("-Loading Material for " + folderMaterialName);
+
+    int numberOfTextures = 0;
     string fileName;
 
     string path = "Materials/" + folderMaterialName;
     string ext = { ".png" };
     for (auto& entity : fs::directory_iterator(path))
     {
-        if(fileName == "")
+        if (fileName == "")
+        {
             fileName = entity.path().filename().string();
+            size_t lastIndex = fileName.find_last_of(".");
+            fileName = fileName.substr(0, lastIndex);
+        }
 
         if (fs::is_regular_file(entity))
         {
@@ -179,9 +227,12 @@ void FileManager::CreateMaterial(string folderMaterialName)
         throw std::runtime_error("Found no color texture for " + fileName);
     }
 
+    Helper::Cout("-- Loaded Texture for Material: " + fileName);
+
+
     if (numberOfTextures > 2)
     {
-        Helper::Cout("-Creating PBR Material: " + fileName);
+        Helper::Cout("-Creating [PBR] Material: " + fileName);
 
         //PBR material
         throw std::runtime_error("Created Material with no textures in it!");
@@ -191,14 +242,14 @@ void FileManager::CreateMaterial(string folderMaterialName)
         Texture* foundTexDepth = allTextures.find("d" + fileName)->second;
         Texture* foundTexNormal = allTextures.find("n" + fileName)->second;
 
-
-        allMaterials.push_back(new PBRMaterial(foundTexColor, fileName, this->device, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal));
+        pair<string, Material*> newMaterial(fileName, new PBRMaterial(foundTexColor, fileName, this->device, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal));
+        allMaterials.insert(newMaterial);
     }
     else if (numberOfTextures > 0)
     {
-        Helper::Cout("-Creating Material: " + fileName);
-
-        allMaterials.push_back(new Material(foundTexColor, fileName, this->device));
+        Helper::Cout("-Created [Normal] Material: " + fileName);
+        pair<string, Material*> newMaterial(fileName, new Material(foundTexColor, fileName, this->device));
+        allMaterials.insert(newMaterial);
     }
 
 }

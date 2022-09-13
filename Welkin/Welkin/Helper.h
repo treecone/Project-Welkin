@@ -4,8 +4,8 @@
 #include <vulkan/vulkan.h>
 
 
-class Helper
+struct Helper
 {
-public:
 	static void Cout(std::string message, bool header = false);
+	float Q_rsqrt(float number);
 };
