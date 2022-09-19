@@ -30,5 +30,7 @@ private:
 	string windowName;
 	VulkanCore* vCore;
 	GLFWwindow* window;
+
+	static void FrameBufferResizeCallback(GLFWwindow* window, int width, int height);
 };
 

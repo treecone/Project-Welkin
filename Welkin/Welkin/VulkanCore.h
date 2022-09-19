@@ -31,8 +31,10 @@ public:
 	~VulkanCore();
 	void SetWindowSize(int width, int height);
 	VkDevice* GetLogicalDevice();
+	void DrawFrame();
 
 	unsigned short currentFrame = 0;
+	bool framebufferResized = false;
 
 private:
 
@@ -106,8 +108,9 @@ private:
 	std::vector<VkImageView> swapChainImageViews;
 	//Holds specified color channels and types of the Swap Chain (aka R,G,B,A in 8 bit or...)
 	VkFormat swapChainImageFormat;
-	//Holds the actual resolution of the swap chain in pixels
+	//Holds the actual resolution of the swap chain in pixels 
 	VkExtent2D swapChainExtent;
+
 
 
 	void CreateSurface();
@@ -136,6 +139,33 @@ private:
 
 #pragma region Pipeline/Passes
 
+	void CreateGraphicsPipeline();
+	void CreateRenderPass();
+	void CreateFrameBuffers();
+
+	VkRenderPass renderPass;
+	VkPipeline graphicsPipeline;
+	VkPipelineLayout pipelineLayout;
+	std::vector<VkFramebuffer> swapChainFramebuffers;
+
+	//Commands ---------------
+
+	void CreateCommandPools();
+	void CreateCommandBuffers(VkCommandPool pool);
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+	std::vector<VkCommandBuffer> mainCommandBuffers;
+	VkCommandPool graphicsCommandPool;
+	VkCommandPool transferCommandPool;
+
+#pragma endregion
+
+#pragma region DrawFrame and Sync Objects
+
+	void CreateSyncObjects();
+	std::vector<VkSemaphore> imageAvailableSemaphores;
+	std::vector<VkSemaphore> renderFinishedSemaphores;
+	std::vector<VkFence> inFlightFences;
 #pragma endregion
 
 

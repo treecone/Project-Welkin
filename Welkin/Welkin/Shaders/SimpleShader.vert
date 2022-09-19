@@ -1,6 +1,7 @@
 #version 450
 
 //Buffers
+/*
 layout(binding = 0) uniform PerFrame 
 {
     mat4 view;
@@ -23,6 +24,7 @@ layout(binding = 2) uniform PerMaterial
 } 
 perMaterial;
 
+
 //IN
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inUV;
@@ -35,10 +37,10 @@ layout(location = 1) out vec3 outNormal;
 layout(location = 2) out vec3 outTangent;
 layout(location = 3) out vec3 outWorldPos;
 
-
+*/
 void main() 
 {
-
+/*
     outWorldPos = vec3(perObject.world * vec4(inPosition, 1.0));
 
     gl_Position = perFrame.proj * perFrame.view * perObject.world * vec4(inPosition, 1.0);
@@ -50,5 +52,7 @@ void main()
     outNormal = normalize(mat3(perObject.worldInverseTranpose) * inNormal);
     outTangent = normalize(mat3(perObject.worldInverseTranpose) * inTangent);
 
+    */
 
+    gl_Position = vec4(0, 0, 0, 0);
 }

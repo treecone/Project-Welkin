@@ -18,7 +18,7 @@ void Helper::Cout(std::string message, bool header)
 void Helper::Warning(std::string message)
 {
 #ifdef _DEBUG
-	std::cout << "\n[[WARNING]]: " + message + "\n" << std::endl;
+	std::cout << "\n[[WARNING]] --------------------------------------------| " + message + "\n" << std::endl;
 #endif
 }
 

@@ -15,8 +15,6 @@ public:
 
 	void SetMaterial(Material* material);
 
-	void Draw(VkDevice* device, Camera* camera);
-
 	string name;
 
 	bool operator < (const GameObject& str) const

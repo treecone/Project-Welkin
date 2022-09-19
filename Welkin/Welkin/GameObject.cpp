@@ -32,8 +32,3 @@ void GameObject::SetMaterial(Material* material)
 {
 	this->material = material;
 }
-
-void GameObject::Draw(VkDevice* device, Camera* camera)
-{
-	
-}

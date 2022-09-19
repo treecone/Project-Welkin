@@ -14,7 +14,7 @@ WkWindow::~WkWindow()
 void WkWindow::InitWindow()
 {
 	Helper::Cout("WkWindow", true);
-	if (!glfwInit())
+	if (glfwInit() == GLFW_FALSE)
 	{
 		throw std::runtime_error("failed to initalize window named: " + windowName);
 	}
@@ -26,6 +26,7 @@ void WkWindow::InitWindow()
 	Helper::Cout("Created Window: " + windowName);
 	window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
 	glfwSetWindowUserPointer(window, this);
+	glfwSetFramebufferSizeCallback(window, FrameBufferResizeCallback);
 	Helper::Cout("Window Created");
 }
 
@@ -42,4 +43,10 @@ GLFWwindow* WkWindow::GetWindow()
 string WkWindow::GetWindowName()
 {
 	return this->windowName;
+}
+
+void WkWindow::FrameBufferResizeCallback(GLFWwindow* window, int width, int height)
+{
+	auto app = reinterpret_cast<VulkanCore*>(glfwGetWindowUserPointer(window));
+	app->framebufferResized = true;
 }

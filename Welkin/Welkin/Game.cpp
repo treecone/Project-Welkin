@@ -36,9 +36,9 @@ Game::~Game()
 	delete vCore;
 	delete mainWindow;
 
-	for (int i = 0; i < gameObjects.size(); i++)
+	for (auto& gameObject : gameObjects)
 	{
-		delete gameObjects[i];
+		delete gameObject;
 	}
 }
 
@@ -62,11 +62,7 @@ void Game::Update()
 	{
 		//Main loop
 		glfwPollEvents();
-
-		for (GameObject* gObject : gameObjects)
-		{
-			gObject->Draw(vCore->GetLogicalDevice(), mainCamera.get());
-		}
+		//vCore->DrawFrame();
 
 		#pragma region Getting FPS
 			deltaSeconds = (unsigned long)std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - startTime).count();

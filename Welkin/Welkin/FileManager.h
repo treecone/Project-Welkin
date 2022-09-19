@@ -29,7 +29,7 @@ public:
 
 	Mesh* FindMesh(string name);
 	Material* FindMaterial(string name);
-	VkShaderModule FindShaderModule(string name);
+	VkShaderModule* FindShaderModule(string name);
 
 
 private:
@@ -45,10 +45,8 @@ private:
 	VkShaderModule CreateShaderModule(const std::vector<char>& shaderCode, VkDevice* device);
 	static std::vector<char> ReadFile(const std::string& filename);
 	
-
-	//TODO switch these to unique pointers 
-	std::unordered_map<string, unique_ptr<Mesh>> allMeshes;
-	std::unordered_map<std::string, VkShaderModule> allShaders;
-	std::unordered_map<string, unique_ptr<Material>> allMaterials;
-	std::unordered_map<string, unique_ptr<Texture>> allTextures;
+	std::unordered_map<string, Mesh*> allMeshes;
+	std::unordered_map<string, VkShaderModule*> allShaders;
+	std::unordered_map<string, Material*> allMaterials;
+	std::unordered_map<string, Texture*> allTextures;
 };

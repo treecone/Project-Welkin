@@ -30,22 +30,34 @@ FileManager::~FileManager()
 {
     for (const auto& shaderFile : allShaders)
     {
-        vkDestroyShaderModule(*device, shaderFile.second, nullptr);
+        vkDestroyShaderModule(*device, *shaderFile.second, nullptr);
+        delete shaderFile.second;
     }
 
-    allMaterials.clear();
-    allTextures.clear();
-    allMeshes.clear();
+    for (const auto& meshFile : allMeshes)
+    {
+        delete meshFile.second;
+    }
+
+    for (const auto& materialFile : allMaterials)
+    {
+        delete materialFile.second;
+    }
+
+    for (const auto& textureFile : allTextures)
+    {
+        delete textureFile.second;
+    }
 }
 
 Mesh* FileManager::FindMesh(string name)
 {
-    unordered_map<string, unique_ptr<Mesh>>::const_iterator iter = allMeshes.find(name);
+    unordered_map<string, Mesh*>::const_iterator iter = allMeshes.find(name);
 
     if (iter != allMeshes.end())
     {
         // iter is item pair in the map. The value will be accessible as `iter->second`.
-        return iter->second.get();
+        return iter->second;
     }
 
     Helper::Cout("[Warning] Couldn't find mesh: " + name);
@@ -54,21 +66,21 @@ Mesh* FileManager::FindMesh(string name)
 
 Material* FileManager::FindMaterial(string name)
 {
-    unordered_map<string, unique_ptr<Material>>::const_iterator iter = allMaterials.find(name);
+    unordered_map<string, Material*>::const_iterator iter = allMaterials.find(name);
 
     if (iter != allMaterials.end())
     {
         // iter is item pair in the map. The value will be accessible as `iter->second`.
-        return iter->second.get();
+        return iter->second;
     }
 
     Helper::Cout("[Warning] Couldn't find material: " + name);
     return nullptr;
 }
 
-VkShaderModule FileManager::FindShaderModule(string name)
+VkShaderModule* FileManager::FindShaderModule(string name)
 {
-    unordered_map<string, VkShaderModule>::const_iterator iter = allShaders.find(name);
+    unordered_map<string, VkShaderModule*>::const_iterator iter = allShaders.find(name);
 
     if (iter != allShaders.end())
     {
@@ -86,19 +98,21 @@ VkShaderModule FileManager::FindShaderModule(string name)
 void FileManager::LoadAllShaders(VkDevice* logicalDevice)
 {
     Helper::Cout("");
-    Helper::Cout("- Loading All Shaders");
+    Helper::Cout("Loading All Shaders");
 
-    std::string path = "Shaders/";
-    std::string ext = { ".spv" };
+    string path = "Shaders/";
+    string ext = { ".spv" };
     for (auto& entity : fs::recursive_directory_iterator(path))
     {
-        std::string fileName = entity.path().filename().string();
+        string fileName = entity.path().filename().string();
         if (fs::is_regular_file(entity))
         {
             if (entity.path().extension() == ext)
             {
-                allShaders.insert({ fileName, CreateShaderModule(ReadFile(path + fileName), logicalDevice) });
-                Helper::Cout("-- Loaded Shader: " + fileName);
+                std::pair<string, VkShaderModule*> newPair(fileName, new VkShaderModule());
+                *newPair.second = CreateShaderModule(ReadFile(path + fileName), logicalDevice);
+                allShaders.insert(newPair);
+                Helper::Cout("- Loaded Shader: " + fileName);
             }
         }
     }
@@ -263,13 +277,11 @@ void FileManager::CreateMaterial(string folderMaterialName, bool loadTexturesFro
         }
 
     }
-
-
     
     //Remove first letter of the name to get the generic name of all the textures
     fileName.erase(0, 1);
 
-    Texture* foundColorTextureName = allTextures.at("c" + fileName).get();
+    Texture* foundColorTextureName = allTextures.at("c" + fileName);
 
     if (foundColorTextureName == nullptr)
     {
@@ -284,10 +296,10 @@ void FileManager::CreateMaterial(string folderMaterialName, bool loadTexturesFro
         //PBR material
         throw std::runtime_error("Created Material with no textures in it!");
 
-        Texture* foundTexRoughness = allTextures.at("r" + fileName).get();
-        Texture* foundTexAO = allTextures.at("a" + fileName).get();
-        Texture* foundTexDepth = allTextures.at("d" + fileName).get();
-        Texture* foundTexNormal = allTextures.at("n" + fileName).get();
+        Texture* foundTexRoughness = allTextures.at("r" + fileName);
+        Texture* foundTexAO = allTextures.at("a" + fileName);
+        Texture* foundTexDepth = allTextures.at("d" + fileName);
+        Texture* foundTexNormal = allTextures.at("n" + fileName);
 
         pair<string, Material*> newMaterial(fileName, new PBRMaterial(foundColorTextureName, fileName, this->device, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal));
         allMaterials.insert(newMaterial);
