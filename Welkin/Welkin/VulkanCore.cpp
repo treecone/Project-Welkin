@@ -1,6 +1,6 @@
 #include "VulkanCore.h"
 
-VulkanCore::VulkanCore(GLFWwindow* window, FileManager* fm)
+VulkanCore::VulkanCore(GLFWwindow* window, FileManager* fm, vector<GameObject*>* gameObjects) : gameObjects(gameObjects)
 {
 	Helper::Cout("Vulkan Core", true);
 	this->window = window;
@@ -51,7 +51,7 @@ void VulkanCore::InitVulkan()
 	CreateImageViews();
 
 	//FileManager
-	fm->Init(&this->device);
+	fm->Init(this);
 
 	//Rendering Stuff
 	Helper::Cout("Pipeline and Passes", true);
@@ -59,6 +59,7 @@ void VulkanCore::InitVulkan()
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPools();
+	CreateAllBuffers();
 	CreateCommandBuffers(graphicsCommandPool);
 	CreateSyncObjects();
 }
@@ -70,7 +71,35 @@ VkDevice* VulkanCore::GetLogicalDevice()
 		return &this->device;
 	}
 	else
+	{
 		throw std::runtime_error("Trying to Access Logical Device before creation");
+	}
+}
+
+VkPhysicalDevice* VulkanCore::GetPhysicalDevice()
+{
+	if (this->device != NULL)
+	{
+		return &this->physicalDevice;
+	}
+	else
+	{
+		throw std::runtime_error("Trying to Access Physical Device before creation");
+	}
+}
+
+VkCommandPool* VulkanCore::GetCommandPool(int type)
+{
+	switch (type)
+	{
+	default:
+	case (0):
+		return &graphicsCommandPool;
+		break;
+
+	case(1):
+		return &transferCommandPool;
+	}
 }
 
 
@@ -699,12 +728,15 @@ void VulkanCore::SetWindowSize(int width, int height)
 		#pragma region Vertex Shader Info
 
 			//Discribes the format of the vertex data that will be passed to the vertex shader
+			auto bindingDescription = Vertex::getBindingDescription();
+			auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
 			VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 			vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-			vertexInputInfo.vertexBindingDescriptionCount = 0;
-			vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-			vertexInputInfo.vertexAttributeDescriptionCount = 0;
-			vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
+			vertexInputInfo.vertexBindingDescriptionCount = 1;
+			vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+			vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+			vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 		#pragma endregion
 
 		#pragma region Input Assembly
@@ -991,9 +1023,10 @@ void VulkanCore::SetWindowSize(int width, int height)
 			{
 				throw std::runtime_error("failed to create transfer command pool!");
 			}
+
+			Helper::Cout("Created [Transfer] Cmd Pool");
 		}
 
-		Helper::Cout("Created [Transfer] Cmd Pool");
 	}
 
 	void VulkanCore::CreateCommandBuffers(VkCommandPool pool)
@@ -1050,6 +1083,11 @@ void VulkanCore::SetWindowSize(int width, int height)
 			vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		#pragma endregion
 
+		
+		//vkCmdBindIndexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
 		#pragma region Dynamic States Setting
 			VkViewport viewport{};
 			viewport.x = 0.0f;
@@ -1066,8 +1104,18 @@ void VulkanCore::SetWindowSize(int width, int height)
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 		#pragma endregion
 
-		//TODO add vertices here
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+		#pragma region Binding Buffers
+
+			for (int i = 0; i < gameObjects->size(); i++)
+			{
+				VkBuffer vertexBuffers[] = { *gameObjects->at(i)->GetMesh()->GetVertexBuffer() };
+				VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+				//TODO optimize this, create a single buffer for all meshes and then use offsets
+
+				vkCmdDraw(commandBuffer, gameObjects->at(i)->GetMesh()->GetVerticesSize(), 1, 0, 0);
+			}
+		#pragma endregion
 
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -1198,4 +1246,75 @@ void VulkanCore::SetWindowSize(int width, int height)
 		Helper::Cout("Created Sync Objects");
 	}
 
+#pragma endregion
+
+#pragma region Buffers
+
+	void VulkanCore::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+	{
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = size;
+		bufferInfo.usage = usage;
+
+		#pragma region Sharing mode
+			VulkanCore::QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
+			uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.transferFamily.value() };
+
+			if (indices.graphicsFamily != indices.presentFamily)
+			{
+				bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+				bufferInfo.queueFamilyIndexCount = 2;
+				bufferInfo.pQueueFamilyIndices = queueFamilyIndices;
+			}
+			else
+			{
+				bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+				}
+		#pragma endregion
+
+		if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create vertex buffer!");
+		}
+
+		//Now bind memory
+		VkMemoryRequirements memRequirements;
+		vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+
+		//Find right type of memory
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		//VK_MEMORY_PROPERTY_HOST_COHERENT_BIT = ensures that the mapped memory always matches the contents of the allocated memory
+		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+		if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to allocate vertex buffer memory!");
+		}
+		//Associate this memory with the buffer
+		vkBindBufferMemory(device, buffer, bufferMemory, 0);
+	}
+
+	void VulkanCore::CreateAllBuffers()
+	{
+		//Vertex
+	}
+
+	uint32_t VulkanCore::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+	{
+		VkPhysicalDeviceMemoryProperties memProperties;
+		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) 
+		{
+			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			{
+				return i;
+			}
+		}
+
+		throw std::runtime_error("failed to find suitable memory type!");
+	}
 #pragma endregion

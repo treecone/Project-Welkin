@@ -16,6 +16,7 @@
 #include "FileManager.h"
 #include <string>
 #include "Vertex.h"
+#include "GameObject.h"
 #include <algorithm>
 #include <optional>
 #include "Helper.h"
@@ -27,17 +28,35 @@ class VulkanCore
 {
 public:
 
-	VulkanCore(GLFWwindow* window, FileManager* fm);
+	VulkanCore(GLFWwindow* window, FileManager* fm, vector<GameObject*>* gameObjects);
 	~VulkanCore();
-	void SetWindowSize(int width, int height);
-	VkDevice* GetLogicalDevice();
-	void DrawFrame();
 
-	unsigned short currentFrame = 0;
+	//Window resizing
+	void SetWindowSize(int width, int height);
 	bool framebufferResized = false;
+	
+	//Getters
+	VkDevice* GetLogicalDevice();
+	VkPhysicalDevice* GetPhysicalDevice();
+	//Graphics = 0, Transfer = 1
+	VkCommandPool* GetCommandPool(int type);
+
+	//Buffers
+	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+
+	//Drawing
+	void DrawFrame();
+	unsigned short currentFrame = 0;
+
+	//Buffers
+	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
 
 private:
 
+	vector<GameObject*>* gameObjects;
 	FileManager* fm;
 
 #pragma region Setup
@@ -76,8 +95,9 @@ private:
 			return graphicsFamily.has_value() && presentFamily.has_value() && transferFamily.has_value();
 		}
 	};
-
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice);
+
+
 
 	#pragma region ValidationLayers
 		//Vector containing all the validation layers I want enabled
@@ -168,6 +188,9 @@ private:
 	std::vector<VkFence> inFlightFences;
 #pragma endregion
 
+#pragma region Buffers
+	void CreateAllBuffers();
+#pragma endregion
 
 };
 

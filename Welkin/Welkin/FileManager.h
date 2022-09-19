@@ -24,7 +24,7 @@ public:
 	FileManager();
 	~FileManager();
 
-	void Init(VkDevice* device);
+	void Init(VulkanCore* vCore);
 
 
 	Mesh* FindMesh(string name);
@@ -34,6 +34,7 @@ public:
 
 private:
 
+	VulkanCore* vCore;
 	VkDevice* device;
 
 	void LoadAllTextures(VkDevice* logicalDevice);

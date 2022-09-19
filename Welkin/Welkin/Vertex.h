@@ -17,7 +17,7 @@ struct Vertex
 		VkVertexInputBindingDescription bindingDescription{};
 		bindingDescription.binding = 0;
 		bindingDescription.stride = sizeof(Vertex);
-		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; //Change for instanced rendering
 		return bindingDescription;
 	}
 

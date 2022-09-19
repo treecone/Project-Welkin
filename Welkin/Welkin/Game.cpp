@@ -12,7 +12,7 @@ void Game::Init()
 	fileManager = new FileManager();
 
 	//Init's the vulkan core
-	vCore = new VulkanCore(mainWindow->GetWindow(), fileManager);
+	vCore = new VulkanCore(mainWindow->GetWindow(), fileManager, &gameObjects);
 
 	Helper::Cout("Game Initalization", true);
 

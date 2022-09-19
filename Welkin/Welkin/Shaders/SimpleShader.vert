@@ -23,9 +23,9 @@ layout(binding = 2) uniform PerMaterial
     mat4 proj;
 } 
 perMaterial;
+*/
 
-
-//IN
+//IN - Vertex attributes
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inUV;
 layout(location = 2) in vec3 inNormal;
@@ -37,7 +37,7 @@ layout(location = 1) out vec3 outNormal;
 layout(location = 2) out vec3 outTangent;
 layout(location = 3) out vec3 outWorldPos;
 
-*/
+
 void main() 
 {
 /*

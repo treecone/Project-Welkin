@@ -5,9 +5,11 @@ FileManager::FileManager()
 
 }
 
-void FileManager::Init(VkDevice* device)
+void FileManager::Init(VulkanCore* vCore)
 {
     Helper::Cout("File Manager", true);
+    this->vCore = vCore;
+    this->device = vCore->GetLogicalDevice();
     
     try
     {
@@ -169,7 +171,7 @@ void FileManager::LoadAllModels()
         string rawName = fileName.substr(0, lastIndex);
         if (fs::is_regular_file(entity))
         {
-            pair<string, Mesh*> newMesh (rawName, new Mesh(path+fileName, device));
+            pair<string, Mesh*> newMesh (rawName, new Mesh(path+fileName, vCore));
             allMeshes.insert(newMesh);
         }
     }
