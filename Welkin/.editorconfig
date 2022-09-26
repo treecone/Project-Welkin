@@ -1,0 +1,17 @@
+
+[*.{appxmanifest,axaml,axml,build,c,c++,cc,cginc,compute,config,cp,cpp,csproj,cu,cuh,cxx,dbml,discomap,dtd,fx,fxh,h,hh,hlsl,hlsli,hlslinc,hpp,hxx,inc,inl,ino,ipp,jsproj,lsproj,mpp,mq4,mq5,mqh,njsproj,nuspec,paml,proj,props,resw,resx,StyleCop,targets,tasks,tpp,usf,ush,vbproj,xaml,xamlx,xml,xoml,xsd}]
+indent_style = tab
+indent_size = tab
+tab_width = 4
+
+[*]
+
+# ReSharper properties
+resharper_cpp_alignment_tab_fill_style = optimal_fill
+resharper_cpp_indent_style = tab
+resharper_cpp_use_indent_from_vs = false
+resharper_linkage_specification_braces = next_line
+resharper_xml_alignment_tab_fill_style = optimal_fill
+resharper_xml_indent_style = tab
+resharper_xml_space_before_self_closing = false
+resharper_xml_use_indent_from_vs = false

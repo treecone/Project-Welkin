@@ -7,7 +7,7 @@
 class GameObject
 {
 public:
-	GameObject(string name, Mesh* mesh, Material* material);
+	GameObject(std::string name, Mesh* mesh, Material* material);
 
 	Mesh* GetMesh();
 	Material* GetMaterial();
@@ -15,7 +15,7 @@ public:
 
 	void SetMaterial(Material* material);
 
-	string name;
+	std::string name;
 
 	bool operator < (const GameObject& str) const
 	{

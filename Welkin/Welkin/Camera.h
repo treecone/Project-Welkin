@@ -12,7 +12,7 @@ public:
 	void Update(float dt);
 	void UpdateViewMatrix();
 	void UpdateViewMatrix(Transform* objToLookAt);
-	void UpdateProjectionMatrix(float aspectRatio);
+	void UpdateProjectionMatrix();
 
 	glm::mat4 GetView() { return viewMatrix; }
 	glm::mat4 GetProjection() { return projMatrix; }
@@ -26,6 +26,7 @@ private:
 	float FOV;
 	float nearPlane;
 	float farPlane;
+	float aspectRatio;
 
 	Transform transform;
 

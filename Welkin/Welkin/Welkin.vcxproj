@@ -153,8 +153,10 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PBRMaterial.cpp" />
     <ClCompile Include="stb.cpp" />
+    <ClCompile Include="StorageBufferObject.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="UniformBufferObject.cpp" />
     <ClCompile Include="VulkanCore.cpp" />
     <ClCompile Include="WkWindow.cpp" />
   </ItemGroup>
@@ -168,8 +170,10 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="PBRMaterial.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="StorageBufferObject.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="UniformBufferObject.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VulkanCore.h" />
     <ClInclude Include="WkWindow.h" />

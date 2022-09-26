@@ -25,19 +25,25 @@ class Mesh
 public:
 	Mesh(string MODEL_PATH, VulkanCore* vCore);
 	VkBuffer* GetVertexBuffer();
+	VkBuffer* GetIndexBuffer();
 	uint32_t GetVerticesSize();
+	uint32_t GetIndeicesSize();
+
 	~Mesh();
 private:
 	VulkanCore* vCore;
 	vector<Vertex> vertices;
-	vector<uint32_t> indices;
+	vector<uint16_t> indices;
 
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
 
 
 	void LoadModel(string MODEL_PATH);
 	void CreateVertexBuffer();
+	void CreateIndexBuffer();
 	//http://foundationsofgameenginedev.com/FGED2-sample.pdf
 	//void CalculateTangents();
 };

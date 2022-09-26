@@ -96,11 +96,12 @@ void Transform::UpdateMatrices()
 		mat4 worldMatrix = mat4();
 
 		mat4 translationMatrix = translate(worldMatrix, position);
-		mat4 scaleMatrix = glm::scale(worldMatrix, this->scale);
+		mat4 scaleMatrix = glm::scale(worldMatrix, scale);
 		mat4 rotationMatrix = glm::eulerAngleXYZ(eulerAngles.x, eulerAngles.y, eulerAngles.z);
 
 		//TODO right order?
-		worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
+		//worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
+		worldMatrix = translationMatrix * rotationMatrix * scaleMatrix;
 
 		if (parent)
 		{

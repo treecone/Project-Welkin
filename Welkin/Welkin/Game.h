@@ -25,12 +25,12 @@ private:
 	WkWindow* mainWindow;
 	VulkanCore* vCore;
 	FileManager* fileManager;
+	Camera* mainCamera;
 
-	unique_ptr<Camera> mainCamera;
-
-	unsigned long deltaSeconds;
-	unsigned long lastDeltaSeconds;
-	unsigned int FPS;
+	float deltaTime;
+	float FPS;
+	unsigned int framesElapsed;
+	float totalTimeSinceFPS;
 
 	void Init();
 	void CreateObject(string objName, string modelName, string materialFolderName, bool sort = false);

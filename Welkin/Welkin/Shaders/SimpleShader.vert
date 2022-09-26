@@ -1,29 +1,21 @@
 #version 450
 
 //Buffers
-/*
 layout(binding = 0) uniform PerFrame 
 {
     mat4 view;
     mat4 proj;
 } 
-perFrame;
+perFrame; 
 
-layout(binding = 1) uniform PerObject 
-{
-    mat4 world;
-    mat4 worldInverseTranpose;
-} 
-perObject;
 
-layout(binding = 2) uniform PerMaterial 
+layout(push_constant) uniform PushConst
 {
-    vec2 uvScale;
-    mat4 view;
-    mat4 proj;
+    //Per object transformation
+    mat4 world; //aka model->world matrix
+    mat4 worldInverseTranspose;
 } 
-perMaterial;
-*/
+pushConst;
 
 //IN - Vertex attributes
 layout(location = 0) in vec3 inPosition;
@@ -40,19 +32,15 @@ layout(location = 3) out vec3 outWorldPos;
 
 void main() 
 {
-/*
-    outWorldPos = vec3(perObject.world * vec4(inPosition, 1.0));
 
-    gl_Position = perFrame.proj * perFrame.view * perObject.world * vec4(inPosition, 1.0);
+    outWorldPos = vec3(pushConst.world * vec4(inPosition, 1.0));
 
-    outUV = inUV * perMaterial.uvScale;
+    gl_Position = perFrame.proj * perFrame.view * pushConst.world * vec4(inPosition, 1.0);
+
+    outUV = inUV; // * perMaterial.uvScale;
 
     //Make sure the normal is in world space, and not local space, 
     //https://www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/geometry/transforming-normals
-    outNormal = normalize(mat3(perObject.worldInverseTranpose) * inNormal);
-    outTangent = normalize(mat3(perObject.worldInverseTranpose) * inTangent);
-
-    */
-
-    gl_Position = vec4(0, 0, 0, 0);
+    outNormal = normalize(mat3(pushConst.worldInverseTranspose) * inNormal);
+    outTangent = vec3(0, 0, 0); //normalize(mat3(Push.worldInverseTranspose) * inTangent);
 }

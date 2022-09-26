@@ -1,6 +1,6 @@
 #include "VulkanCore.h"
 
-VulkanCore::VulkanCore(GLFWwindow* window, FileManager* fm, vector<GameObject*>* gameObjects) : gameObjects(gameObjects)
+VulkanCore::VulkanCore(GLFWwindow* window, FileManager* fm, vector<GameObject*>* gameObjects, Camera* mainCamera) : gameObjects(gameObjects), mainCamera(mainCamera)
 {
 	Helper::Cout("Vulkan Core", true);
 	this->window = window;
@@ -11,6 +11,11 @@ VulkanCore::VulkanCore(GLFWwindow* window, FileManager* fm, vector<GameObject*>*
 VulkanCore::~VulkanCore()
 {
 	CleanupSwapChain();
+
+	for (auto& UBO : allUniformBufferObjects)
+	{
+		delete UBO;
+	}
 
 	//Sync Objects 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
@@ -44,7 +49,6 @@ void VulkanCore::InitVulkan()
 	CreateSurface();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
-	//CreateMemoryAllocator();
 
 	//Presentation
 	CreateSwapchain();
@@ -56,10 +60,12 @@ void VulkanCore::InitVulkan()
 	//Rendering Stuff
 	Helper::Cout("Pipeline and Passes", true);
 	CreateRenderPass();
+	allUniformBufferObjects.push_back(new UniformBufferObject(uBufferType::perFrame, this->GetLogicalDevice(), this->mainCamera, &CreateBuffer));
+
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPools();
-	CreateAllBuffers();
+
 	CreateCommandBuffers(graphicsCommandPool);
 	CreateSyncObjects();
 }
@@ -248,6 +254,11 @@ void VulkanCore::SetWindowSize(int width, int height)
 			VkPhysicalDeviceProperties deviceProperties;
 			vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 			Helper::Cout("Using Card" + (string)deviceProperties.deviceName);
+
+			if (deviceProperties.limits.maxPushConstantsSize < sizeof(PushConstants))
+			{
+				throw std::runtime_error("Allowed push constant size is too small");
+			}
 		}
 		else 
 		{
@@ -785,7 +796,8 @@ void VulkanCore::SetWindowSize(int width, int height)
 			rasterizer.lineWidth = 1.0f;
 
 			//Cull Front-back, or both, or neither
-			rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+			//TODO change this to Vk cull mode back bit 
+			rasterizer.cullMode = VK_CULL_MODE_NONE;
 			rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
 			rasterizer.depthBiasEnable = VK_FALSE;
@@ -850,10 +862,21 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 			VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 			pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-			pipelineLayoutInfo.setLayoutCount = 0; // Optional
-			pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
-			pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-			pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+
+			vector<VkDescriptorSetLayout> allDescriptorLayouts (allUniformBufferObjects.size());
+			for (auto& UBO : allUniformBufferObjects)
+			{
+				allDescriptorLayouts.push_back(*UBO->GetDescriptorSetLayout());
+			}
+			pipelineLayoutInfo.pSetLayouts = allDescriptorLayouts.data();
+
+			VkPushConstantRange range{};
+			range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			range.offset = 0;
+			range.size = sizeof(PushConstants);
+
+			pipelineLayoutInfo.pushConstantRangeCount = 1; // Optional
+			pipelineLayoutInfo.pPushConstantRanges = &range; // Optional
 
 			if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
 			{
@@ -1029,7 +1052,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 	}
 
-	void VulkanCore::CreateCommandBuffers(VkCommandPool pool)
+	void VulkanCore::CreateCommandBuffers(const VkCommandPool pool)
 	{
 		mainCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
@@ -1050,7 +1073,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 	}
 
-	void VulkanCore::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+	void VulkanCore::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const uint32_t imageIndex)
 	{
 		#pragma region Begin Cmd Buffer
 
@@ -1083,9 +1106,6 @@ void VulkanCore::SetWindowSize(int width, int height)
 			vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		#pragma endregion
 
-		
-		//vkCmdBindIndexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
 		#pragma region Dynamic States Setting
@@ -1104,16 +1124,47 @@ void VulkanCore::SetWindowSize(int width, int height)
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 		#pragma endregion
 
+		//Used for not updating the vertex and index buffers every frame
+		uint32_t lastIndicesSize = 0;
+
 		#pragma region Binding Buffers
 
-			for (int i = 0; i < gameObjects->size(); i++)
+		//Uniform Buffer Objects 
+		vector<VkDescriptorSet> allCurrentFrameDescriptorSets;
+		for (auto& UBO : allUniformBufferObjects)
+		{
+			allCurrentFrameDescriptorSets.push_back(UBO->GetDescriptorSet(currentFrame));
+		}
+
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, allUniformBufferObjects.size(), allCurrentFrameDescriptorSets.data(), 0, nullptr);
+
+			for (unsigned long long i = 0; i < gameObjects->size(); i++)
 			{
-				VkBuffer vertexBuffers[] = { *gameObjects->at(i)->GetMesh()->GetVertexBuffer() };
-				VkDeviceSize offsets[] = { 0 };
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+				const auto newIndicesSize = (gameObjects->at(i)->GetMesh()->GetIndeicesSize());
+				//string newMaterialName = gameObjects->at(i)->GetMaterial()->GetMaterialName();
+
+				//Push Constant
+				PushConstants push{};
+				push.world = gameObjects->at(i)->GetTransform()->GetWorldMatrix();
+				push.worldInverseTranspose = gameObjects->at(i)->GetTransform()->GetWorldInverseTransposeMatrix();
+				vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &push);
+
+				if (newIndicesSize != lastIndicesSize)
+				{
+					//New Mesh, bind new vertex and index buffers
+
+					const VkBuffer vertexBuffers[] = { *gameObjects->at(i)->GetMesh()->GetVertexBuffer() };
+					constexpr  VkDeviceSize offsets[] = { 0 };
+					vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+					vkCmdBindIndexBuffer(commandBuffer, *gameObjects->at(i)->GetMesh()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+
+					lastIndicesSize = newIndicesSize;
+				}
+
 				//TODO optimize this, create a single buffer for all meshes and then use offsets
 
-				vkCmdDraw(commandBuffer, gameObjects->at(i)->GetMesh()->GetVerticesSize(), 1, 0, 0);
+				vkCmdDrawIndexed(commandBuffer, newIndicesSize, 1, 0, 0, 0);
 			}
 		#pragma endregion
 
@@ -1155,6 +1206,12 @@ void VulkanCore::SetWindowSize(int width, int height)
 		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) 
 		{
 			throw std::runtime_error("failed to acquire swap chain image!");
+		}
+
+		//Updating the Uniform Buffer Objects 
+		for (auto& UBO : allUniformBufferObjects)
+		{
+			UBO->UpdateUniformBuffer(currentFrame);
 		}
 
 		//Sets fence(s) to unsignaled state
@@ -1250,7 +1307,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 #pragma region Buffers
 
-	void VulkanCore::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+	void VulkanCore::CreateBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage, const VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 	{
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -1258,8 +1315,9 @@ void VulkanCore::SetWindowSize(int width, int height)
 		bufferInfo.usage = usage;
 
 		#pragma region Sharing mode
-			VulkanCore::QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
-			uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.transferFamily.value() };
+
+			const QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
+			const uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.transferFamily.value() };
 
 			if (indices.graphicsFamily != indices.presentFamily)
 			{
@@ -1270,7 +1328,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			else
 			{
 				bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-				}
+			}
 		#pragma endregion
 
 		if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
@@ -1297,7 +1355,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 		vkBindBufferMemory(device, buffer, bufferMemory, 0);
 	}
 
-	void VulkanCore::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+	void VulkanCore::CopyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size) const
 	{
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1333,19 +1391,14 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 	}
 
-	void VulkanCore::CreateAllBuffers()
-	{
-		//Vertex
-	}
-
-	uint32_t VulkanCore::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+	uint32_t VulkanCore::FindMemoryType(const uint32_t type_filter, const VkMemoryPropertyFlags properties) const
 	{
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
 		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) 
 		{
-			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			if ((type_filter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
 			{
 				return i;
 			}
@@ -1353,4 +1406,5 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		throw std::runtime_error("failed to find suitable memory type!");
 	}
+
 #pragma endregion

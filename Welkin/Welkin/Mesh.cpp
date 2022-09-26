@@ -7,6 +7,7 @@ Mesh::Mesh(string MODEL_PATH, VulkanCore* vCore): vCore(vCore)
 {
 	LoadModel(MODEL_PATH);
 	CreateVertexBuffer();
+	CreateIndexBuffer();
 }
 
 VkBuffer* Mesh::GetVertexBuffer()
@@ -14,15 +15,28 @@ VkBuffer* Mesh::GetVertexBuffer()
 	return &vertexBuffer;
 }
 
+VkBuffer* Mesh::GetIndexBuffer()
+{
+	return &indexBuffer;
+}
+
 uint32_t Mesh::GetVerticesSize()
 {
 	return vertices.size();
+}
+
+uint32_t Mesh::GetIndeicesSize()
+{
+	return this->indices.size();
 }
 
 Mesh::~Mesh()
 {
 	vkDestroyBuffer(*vCore->GetLogicalDevice(), vertexBuffer, nullptr);
 	vkFreeMemory(*vCore->GetLogicalDevice(), vertexBufferMemory, nullptr);
+
+	vkDestroyBuffer(*vCore->GetLogicalDevice(), indexBuffer, nullptr);
+	vkFreeMemory(*vCore->GetLogicalDevice(), indexBufferMemory, nullptr);
 }
 
 void Mesh::LoadModel(std::string MODEL_PATH)
@@ -110,6 +124,34 @@ void Mesh::CreateVertexBuffer()
 	vkDestroyBuffer(device, stagingBuffer, nullptr);
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
 
-	Helper::Cout("- Vertex Buffer Memory Bound");
+	Helper::Cout("- Vertex Buffer Memory Bound and Created");
 
+}
+
+void Mesh::CreateIndexBuffer()
+{
+	VkDevice device = *vCore->GetLogicalDevice();
+	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	vCore->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		stagingBuffer, stagingBufferMemory);
+
+	void* data;
+	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, vertices.data(), (size_t)bufferSize);
+	vkUnmapMemory(device, stagingBufferMemory);
+
+	vCore->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+		VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		indexBuffer, indexBufferMemory);
+
+	vCore->CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+	vkDestroyBuffer(device, stagingBuffer, nullptr);
+	vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+	Helper::Cout("- Index Buffer Memory Bound and Created");
 }

@@ -63,6 +63,12 @@
     <ClCompile Include="stb.cpp">
       <Filter>DefineCPP</Filter>
     </ClCompile>
+    <ClCompile Include="UniformBufferObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StorageBufferObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WkWindow.h">
@@ -105,6 +111,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UniformBufferObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StorageBufferObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

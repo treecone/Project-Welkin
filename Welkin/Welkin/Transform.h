@@ -30,6 +30,9 @@ public:
 
 	mat4 GetWorldMatrix();
 	mat4 GetWorldInverseTransposeMatrix();
+
+	void UpdateMatrices();
+
 	/*
 	void AddChild(Transform* child, bool makeChildRelative);
 	void RemoveChild(Transform* child, bool applyParentTransform);
@@ -51,11 +54,11 @@ private:
 
 	//World matrix and such
 	bool matricesDirty;
+	//aka Model->World Matrix
 	mat4 worldMatrix;
 	mat4 worldInverseTransposeMatrix;
 
 	//Update helper funtions
-	void UpdateMatrices();
 	void MarkChildTransformsDirty();
 
 	//Helper for conversions
