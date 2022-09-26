@@ -3,7 +3,6 @@
 #include "Vertex.h"
 #include <unordered_map>
 #include "Helper.h"
-#include "VulkanCore.h"
 #include <vulkan/vulkan.h>
 #include <glm/gtx/hash.hpp>
 
@@ -19,6 +18,8 @@ namespace std
 		}
 	};
 }
+
+class VulkanCore;
 
 class Mesh
 {

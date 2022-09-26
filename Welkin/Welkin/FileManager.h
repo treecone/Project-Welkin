@@ -18,6 +18,8 @@
 
 namespace fs = std::filesystem;
 
+class VulkanCore;
+
 class FileManager
 {
 public:
@@ -26,11 +28,9 @@ public:
 
 	void Init(VulkanCore* vCore);
 
-
 	Mesh* FindMesh(string name);
 	Material* FindMaterial(string name);
 	VkShaderModule* FindShaderModule(string name);
-
 
 private:
 

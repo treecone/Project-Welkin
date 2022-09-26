@@ -55,16 +55,16 @@ void VulkanCore::InitVulkan()
 	CreateImageViews();
 
 	//FileManager
+	CreateCommandPools();
 	fm->Init(this);
 
 	//Rendering Stuff
 	Helper::Cout("Pipeline and Passes", true);
 	CreateRenderPass();
-	allUniformBufferObjects.push_back(new UniformBufferObject(uBufferType::perFrame, this->GetLogicalDevice(), this->mainCamera, &CreateBuffer));
+	allUniformBufferObjects.push_back(new UniformBufferObject(uBufferType::perFrame, this, this->mainCamera));
 
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
-	CreateCommandPools();
 
 	CreateCommandBuffers(graphicsCommandPool);
 	CreateSyncObjects();
@@ -362,6 +362,10 @@ void VulkanCore::SetWindowSize(int width, int height)
 		if (!indices.transferFamily.has_value())
 		{
 			indices.transferFamily = indices.graphicsFamily;
+		}
+		else
+		{
+			Helper::Cout("Found seperate transfer family");
 		}
 
 		return indices;
@@ -863,20 +867,23 @@ void VulkanCore::SetWindowSize(int width, int height)
 			VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 			pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
-			vector<VkDescriptorSetLayout> allDescriptorLayouts (allUniformBufferObjects.size());
+			vector<VkDescriptorSetLayout> allDescriptorLayouts;
 			for (auto& UBO : allUniformBufferObjects)
 			{
 				allDescriptorLayouts.push_back(*UBO->GetDescriptorSetLayout());
 			}
+			pipelineLayoutInfo.setLayoutCount = allDescriptorLayouts.size();
 			pipelineLayoutInfo.pSetLayouts = allDescriptorLayouts.data();
+			//pipelineLayoutInfo.pSetLayouts = allUniformBufferObjects[0]->GetDescriptorSetLayout();
+
 
 			VkPushConstantRange range{};
 			range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 			range.offset = 0;
 			range.size = sizeof(PushConstants);
 
-			pipelineLayoutInfo.pushConstantRangeCount = 1; // Optional
-			pipelineLayoutInfo.pPushConstantRanges = &range; // Optional
+			pipelineLayoutInfo.pushConstantRangeCount = 1;
+			pipelineLayoutInfo.pPushConstantRanges = &range;
 
 			if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
 			{
@@ -1034,7 +1041,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		Helper::Cout("Created [Graphics] Cmd Pool");
 
-		if (graphicsCommandPool != transferCommandPool)
+		if (queueFamilyIndices.graphicsFamily.value() != queueFamilyIndices.transferFamily.value())
 		{
 			//Transfer Cmd Pool
 			VkCommandPoolCreateInfo poolInfo{};
@@ -1245,7 +1252,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			//inFlightFence is signaled after cmd buffer finishes exacution
 			if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
 			{
-				throw std::runtime_error("failed to submit draw command buffer!");
+				//throw std::runtime_error("failed to submit draw command buffer!");
 			}
 		#pragma endregion	
 
@@ -1319,7 +1326,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			const QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 			const uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.transferFamily.value() };
 
-			if (indices.graphicsFamily != indices.presentFamily)
+			if (indices.graphicsFamily != indices.transferFamily)
 			{
 				bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
 				bufferInfo.queueFamilyIndexCount = 2;

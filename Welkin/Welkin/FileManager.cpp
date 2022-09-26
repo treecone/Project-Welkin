@@ -1,4 +1,5 @@
 #include "FileManager.h"
+#include "VulkanCore.h"
 
 FileManager::FileManager()
 {
@@ -303,12 +304,12 @@ void FileManager::CreateMaterial(string folderMaterialName, bool loadTexturesFro
         Texture* foundTexDepth = allTextures.at("d" + fileName);
         Texture* foundTexNormal = allTextures.at("n" + fileName);
 
-        pair<string, Material*> newMaterial(fileName, new PBRMaterial(foundColorTextureName, fileName, this->device, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal));
+        pair<string, Material*> newMaterial(fileName, new PBRMaterial(foundColorTextureName, fileName, this->device, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal, glm::vec2(1, 1)));
         allMaterials.insert(newMaterial);
     }
     else if (numberOfTextures > 0)
     {
-        pair<string, Material*> newMaterial(fileName, new Material(foundColorTextureName, fileName, this->device));
+        pair<string, Material*> newMaterial(fileName, new Material(foundColorTextureName, fileName, this->device, glm::vec2(1, 1)));
         allMaterials.insert(newMaterial);
         Helper::Cout("Created [Normal] Material: " + fileName);
     }

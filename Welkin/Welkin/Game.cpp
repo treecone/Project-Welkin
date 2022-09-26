@@ -20,11 +20,11 @@ void Game::Init()
 
 	Helper::Cout("Game Initalization", true);
 
-	//TODO change the naming conventions of models and materials
-	CreateObject("Viking Room", "VikingRoom", "VikingRoom");
-
 	//Init's the vulkan core
 	vCore = new VulkanCore(mainWindow->GetWindow(), fileManager, &gameObjects, mainCamera);
+
+	//TODO change the naming conventions of models and materials
+	CreateObject("Viking Room", "VikingRoom", "VikingRoom");
 
 	Helper::Cout("Game Loop", true);
 	Update();

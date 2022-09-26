@@ -17,6 +17,7 @@ protected:
 	//Perameters
 	std::string materialName;
 	glm::vec2 uvScale;
+
 	//Images
 	Texture* tex_Color;
 

@@ -6,15 +6,36 @@
 
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
-extern const short MAX_FRAMES_IN_FLIGHT;
-
 enum uBufferType { nullBuffer = 0, perFrame = 1, perMaterial = 2 };
+
+#pragma region UBO Structs
+/*
+Scalars have to be aligned by N (= 4 bytes given 32 bit floats).
+A vec2 must be aligned by 2N (= 8 bytes)
+A vec3 or vec4 must be aligned by 4N (= 16 bytes)
+A nested structure must be aligned by the base alignment of its members rounded up to a multiple of 16.
+A mat4 matrix must have the same alignment as a vec4.
+*/
+
+struct UboPerFrame
+{
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
+};
+
+struct UboPerMaterial
+{
+	vec2 uvScale;
+};
+#pragma endregion
+
+class VulkanCore;
 
 class UniformBufferObject
 {
 public:
 
-	UniformBufferObject(uBufferType bufferType, VkDevice* device, Camera* mainCamera, void (*CreateBuffer)(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&));
+	UniformBufferObject(uBufferType bufferType, VulkanCore* vCore, Camera* mainCamera);
 	~UniformBufferObject();
 
 	VkDescriptorSetLayout* GetDescriptorSetLayout() { return &descriptorSetLayout; };
@@ -23,6 +44,7 @@ public:
 	void UpdateUniformBuffer(unsigned short currentFrame);
 private:
 	//Init
+	VulkanCore* vCore;
 	VkDevice* device;
 	Camera* mainCamera;
 	void (*CreateBuffer)(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&);
@@ -46,23 +68,4 @@ private:
 	void CreateUniformBufers();
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
-};
-
-/*
-Scalars have to be aligned by N (= 4 bytes given 32 bit floats).
-A vec2 must be aligned by 2N (= 8 bytes)
-A vec3 or vec4 must be aligned by 4N (= 16 bytes)
-A nested structure must be aligned by the base alignment of its members rounded up to a multiple of 16.
-A mat4 matrix must have the same alignment as a vec4.
-*/
-
-struct UboPerFrame
-{
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 proj;
-};
-
-struct UboPerMaterial
-{
-	vec2 uvScale;
 };

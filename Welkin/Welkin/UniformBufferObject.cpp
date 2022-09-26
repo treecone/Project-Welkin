@@ -1,11 +1,13 @@
 #include "UniformBufferObject.h"
+#include "VulkanCore.h"
 
 //Good img explaining UBO's - https://vkguide.dev/docs/chapter-4/descriptors/
 
-UniformBufferObject::UniformBufferObject(uBufferType bufferType, VkDevice* device, Camera* mainCamera, void (*CreateBuffer)(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&))
-	: bufferType{ bufferType }, device{device}, mainCamera{mainCamera}, CreateBuffer{CreateBuffer}
+UniformBufferObject::UniformBufferObject(uBufferType bufferType, VulkanCore* vCore, Camera* mainCamera)
+	: bufferType{ bufferType }, mainCamera{mainCamera}, CreateBuffer{CreateBuffer}, vCore {vCore}
 {
 	Helper::Cout("Creating Uniform Buffer");
+	device = vCore->GetLogicalDevice();
 	CreateDescriptorSetLayout(VK_SHADER_STAGE_VERTEX_BIT);
 	CreateUniformBufers();
 	CreateDescriptorPool();
@@ -51,17 +53,11 @@ void UniformBufferObject::CreateUniformBufers()
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
 	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
-	if (MAX_FRAMES_IN_FLIGHT != 2)
-	{
-		throw std::invalid_argument("UHOH");
-	}
-
 	uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
 	{
-		(*CreateBuffer)(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+		vCore->CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
 	}
 }
 
