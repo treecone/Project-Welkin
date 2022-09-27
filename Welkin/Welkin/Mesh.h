@@ -1,5 +1,4 @@
 #pragma once
-#include "Mesh.h"
 #include "Vertex.h"
 #include <unordered_map>
 #include "Helper.h"
@@ -10,11 +9,22 @@ using namespace std;
 
 namespace std
 {
+	inline void hash_combine(std::size_t& seed) { }
+
+	template <typename T, typename... Rest>
+	inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
+		std::hash<T> hasher;
+		seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		hash_combine(seed, rest...);
+	}
+
 	template<> struct hash<Vertex>
 	{
 		size_t operator()(Vertex const& vertex) const
 		{
-			return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.UV) << 1);
+			size_t seed = 0;
+			hash_combine(seed, vertex.position, vertex.UV, vertex.normal);
+			return seed;
 		}
 	};
 }
@@ -34,7 +44,7 @@ public:
 private:
 	VulkanCore* vCore;
 	vector<Vertex> vertices;
-	vector<uint16_t> indices;
+	vector<uint32_t> indices;
 
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;

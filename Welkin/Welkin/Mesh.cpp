@@ -53,35 +53,43 @@ void Mesh::LoadModel(std::string MODEL_PATH)
 		throw std::runtime_error(err);
 	}
 
+	vertices.clear();
+	indices.clear();
+
 	std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
-	for (const auto& shape : shapes) 
-	{
-		for (const auto& index : shape.mesh.indices) 
-		{
+	for (const auto& shape : shapes) {
+		for (const auto& index : shape.mesh.indices) {
 			Vertex vertex{};
 
-			if(index.vertex_index >= 0)
-			vertex.position = {
+			if (index.vertex_index >= 0)
+			{
+				vertex.position = {
 				attrib.vertices[3 * index.vertex_index + 0],
 				attrib.vertices[3 * index.vertex_index + 1],
-				attrib.vertices[3 * index.vertex_index + 2]
-			};
-
-			//0 is the top, not bottom, flip
-			vertex.UV = 
+				attrib.vertices[3 * index.vertex_index + 2],
+				};
+			}
+			
+			if (index.texcoord_index >= 0)
 			{
-				attrib.texcoords[2 * index.texcoord_index + 0],
-				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-			};
+				vertex.UV = 
+				{
+					attrib.texcoords[2 * index.texcoord_index + 0],
+					1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+				};
+			}
 
 			if (index.normal_index >= 0)
-			vertex.normal = {
+			{
+				vertex.normal =
+				{
+					attrib.normals[3 * index.normal_index + 0],
+					attrib.normals[3 * index.normal_index + 1],
+					attrib.normals[3 * index.normal_index + 2],
+				};
+			}
 
-				attrib.normals[3 * index.normal_index + 0],
-				attrib.normals[3 * index.normal_index + 1],
-				attrib.normals[3 * index.normal_index + 2]
-			};
 
 			if (uniqueVertices.count(vertex) == 0) 
 			{
@@ -91,9 +99,6 @@ void Mesh::LoadModel(std::string MODEL_PATH)
 
 			indices.push_back(uniqueVertices[vertex]);
 		}
-
-		//For each triangle, calculate tangents
-		//CalculateTangents();
 	}
 
 	Helper::Cout("Loaded Mesh: [" + MODEL_PATH + "]");
@@ -142,7 +147,7 @@ void Mesh::CreateIndexBuffer()
 
 	void* data;
 	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, vertices.data(), (size_t)bufferSize);
+	memcpy(data, indices.data(), (size_t)bufferSize);
 	vkUnmapMemory(device, stagingBufferMemory);
 
 	vCore->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |

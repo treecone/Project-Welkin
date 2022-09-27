@@ -51,6 +51,6 @@ struct Vertex
 
 	bool operator==(const Vertex& other) const 
 	{
-		return position == other.position && UV == other.UV && normal == other.normal && tangent == other.tangent;
+		return position == other.position && UV == other.UV && normal == other.normal;
 	}
 };

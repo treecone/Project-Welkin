@@ -365,7 +365,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 		}
 		else
 		{
-			Helper::Cout("Found seperate transfer family");
+			//Helper::Cout("Found seperate transfer family");
 		}
 
 		return indices;
@@ -1163,8 +1163,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 					const VkBuffer vertexBuffers[] = { *gameObjects->at(i)->GetMesh()->GetVertexBuffer() };
 					constexpr  VkDeviceSize offsets[] = { 0 };
 					vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-					vkCmdBindIndexBuffer(commandBuffer, *gameObjects->at(i)->GetMesh()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+					vkCmdBindIndexBuffer(commandBuffer, *gameObjects->at(i)->GetMesh()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
 					lastIndicesSize = newIndicesSize;
 				}
@@ -1252,7 +1251,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			//inFlightFence is signaled after cmd buffer finishes exacution
 			if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
 			{
-				//throw std::runtime_error("failed to submit draw command buffer!");
+				throw std::runtime_error("failed to submit draw command buffer!");
 			}
 		#pragma endregion	
 

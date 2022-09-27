@@ -24,7 +24,7 @@ void Game::Init()
 	vCore = new VulkanCore(mainWindow->GetWindow(), fileManager, &gameObjects, mainCamera);
 
 	//TODO change the naming conventions of models and materials
-	CreateObject("Viking Room", "VikingRoom", "VikingRoom");
+	CreateObject("Viking Cone", "Pyramid", "VikingRoom");
 
 	Helper::Cout("Game Loop", true);
 	Update();
@@ -61,6 +61,7 @@ void Game::Update()
 	while (!mainWindow->shouldClose())
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
+		Helper::Cout("[" + std::to_string(framesElapsed) + "]");
 		
 		//MAIN LOOP
 		{ 
@@ -77,7 +78,14 @@ void Game::Update()
 				gameObj->GetTransform()->UpdateMatrices();
 			}
 
-			vCore->DrawFrame();
+			if (gameObjects.size() > 0)
+			{
+				if (framesElapsed == 0)
+				{
+					Helper::Cout("Begining to draw frame!");
+				}
+				vCore->DrawFrame();
+			}
 		}
 		
 

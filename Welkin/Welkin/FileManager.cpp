@@ -172,8 +172,11 @@ void FileManager::LoadAllModels()
         string rawName = fileName.substr(0, lastIndex);
         if (fs::is_regular_file(entity))
         {
-            pair<string, Mesh*> newMesh (rawName, new Mesh(path+fileName, vCore));
-            allMeshes.insert(newMesh);
+			if (entity.path().extension() == ext)
+			{
+				pair<string, Mesh*> newMesh(rawName, new Mesh(path + fileName, vCore));
+				allMeshes.insert(newMesh);
+			}
         }
     }
 }
