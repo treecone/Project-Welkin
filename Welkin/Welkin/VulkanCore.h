@@ -41,6 +41,12 @@ public:
 	//Graphics = 0, Transfer = 1
 	VkCommandPool* GetCommandPool(int type);
 	Camera* GetCamera() { return this->mainCamera; };
+	VkRenderPass* GetRenderPass() { return &this->renderPass; };
+	VkInstance* GetInstance() { return &this->instance; };
+	//0 - Graphics, 1 - presentation, 2 - transfer
+	VkQueue* GetQueue(int type);
+	size_t GetFramebufferCount() { return this->swapChainFramebuffers.size(); };
+	VkFormat GetSwapchainImageFormat() { return this->swapChainImageFormat; };
 
 	//Buffers
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);

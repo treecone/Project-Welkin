@@ -108,6 +108,22 @@ VkCommandPool* VulkanCore::GetCommandPool(int type)
 	}
 }
 
+VkQueue* VulkanCore::GetQueue(int type)
+{
+	switch (type)
+	{
+	default:
+	case(0):
+		return &this->graphicsQueue;
+		break;
+	case(1):
+		return &this->presentationQueue;
+		break;
+	case(2):
+		return &this->transferQueue;
+	}
+}
+
 
 void VulkanCore::SetWindowSize(int width, int height)
 {

@@ -18,6 +18,8 @@ public:
 	GLFWwindow* GetWindow();
 	string GetWindowName();
 	bool shouldClose() {return glfwWindowShouldClose(window);};
+	vec2 GetWidthHeight() { return vec2(width, height); }
+	vec2 GetMousePos();
 
 #pragma region Prevents copying the pointer and then having two pointers, deleting only one
 	WkWindow(const WkWindow&) = delete;

@@ -45,6 +45,13 @@ string WkWindow::GetWindowName()
 	return this->windowName;
 }
 
+vec2 WkWindow::GetMousePos()
+{
+	double x, y;
+	glfwGetCursorPos(this->window, &x, &y);
+	return vec2(x, y);
+}
+
 void WkWindow::FrameBufferResizeCallback(GLFWwindow* window, int width, int height)
 {
 	auto app = reinterpret_cast<VulkanCore*>(glfwGetWindowUserPointer(window));

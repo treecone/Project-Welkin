@@ -23,6 +23,12 @@ void Game::Init()
 	//Init's the vulkan core
 	vCore = new VulkanCore(mainWindow->GetWindow(), fileManager, &gameObjects, mainCamera);
 
+	//input = new Input();
+	Input::GetInstance().InitInput(mainWindow);
+
+	//imGui = new ImGUI(vCore, mainWindow, input);
+
+
 	//TODO change the naming conventions of models and materials
 	CreateObject("Viking Cone", "Pyramid", "VikingRoom");
 
@@ -36,6 +42,8 @@ Game::~Game()
 	delete fileManager;
 	delete mainCamera;
 	delete vCore;
+	//delete imGui;
+	///delete input;
 	delete mainWindow;
 
 	for (auto& gameObject : gameObjects)
@@ -61,22 +69,23 @@ void Game::Update()
 	while (!mainWindow->shouldClose())
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
-		Helper::Cout("[" + std::to_string(framesElapsed) + "]");
+		//Helper::Cout("[" + std::to_string(framesElapsed) + "]");
 		
 		//MAIN LOOP
 		{ 
 			glfwPollEvents();
-
+			Input::GetInstance().Update();
 			mainCamera->Update((float)deltaTime);
 
 			const int rotateSpeed = 2;
 			gameObjects[0]->GetTransform()->Rotate(0, 0, rotateSpeed * (float)deltaTime);
 
-			//Rotate Objs
 			for (auto& gameObj : gameObjects)
 			{
 				gameObj->GetTransform()->UpdateMatrices();
 			}
+
+			//imGui->Update((float)deltaTime);
 
 			if (gameObjects.size() > 0)
 			{
@@ -86,6 +95,8 @@ void Game::Update()
 				}
 				vCore->DrawFrame();
 			}
+
+			Input::GetInstance().EndOfFrame();
 		}
 		
 

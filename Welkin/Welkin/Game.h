@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <chrono>
 #include "Camera.h"
+#include "ImGUI.h"
 #include "GameObject.h"
 
 class Game
@@ -24,7 +25,9 @@ private:
 
 	WkWindow* mainWindow;
 	VulkanCore* vCore;
+	ImGUI* imGui;
 	FileManager* fileManager;
+	//Input* input;
 	Camera* mainCamera;
 
 	float deltaTime;
