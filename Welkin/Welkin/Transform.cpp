@@ -15,6 +15,21 @@ Transform::Transform()
 	parent = nullptr;
 }
 
+Transform::Transform(vec3 pos, vec3 rotation, vec3 scale)
+{
+	//Start matrices as identity
+	worldMatrix = glm::mat4(1);
+	worldInverseTransposeMatrix = glm::mat4(1);
+
+	this->position = pos;
+	this->eulerAngles = rotation;
+	this->scale = scale;
+
+	matricesDirty = true;
+
+	parent = nullptr;
+}
+
 void Transform::MoveAbsolute(float x, float y, float z)
 {
 	position += vec3(x, y, z);
@@ -74,6 +89,14 @@ void Transform::SetTransformsFromMatrix(mat4 worldMatrix)
 	eulerAngles = QuaterionToEuler(rotation);
 	this->scale = scale;
 
+	matricesDirty = true;
+}
+
+void Transform::SetTransform(Transform transform)
+{
+	position = transform.GetPosition();
+	eulerAngles = transform.GetPitchYawRoll();
+	scale = transform.GetScale();
 	matricesDirty = true;
 }
 

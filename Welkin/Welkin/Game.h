@@ -36,6 +36,6 @@ private:
 	float totalTimeSinceFPS;
 
 	void Init();
-	void CreateObject(string objName, string modelName, string materialFolderName, bool sort = false);
+	void CreateObject(string objName, string modelName, string materialFolderName, Transform transform = Transform(), bool sort = false);
 	void SortObjectsByMaterial();
 };

@@ -15,7 +15,7 @@ void Game::Init()
 	const float nearPlane = 0.1f;
 	const float farPlane = 1000;
 
-	mainCamera = new Camera(3.0f, 1.0f, (float)WIDTH / (float)HEIGHT, nearPlane, farPlane);
+	mainCamera = new Camera(3.0f, 1.0f, 45, (float)WIDTH / (float)HEIGHT, nearPlane, farPlane);
 	mainCamera->GetTransform()->SetPosition(0, 0, -10);
 
 	Helper::Cout("Game Initalization", true);
@@ -31,6 +31,9 @@ void Game::Init()
 
 	//TODO change the naming conventions of models and materials
 	CreateObject("Viking Cone", "Pyramid", "VikingRoom");
+
+	Transform planeTransform(vec3(0, 0, 0), vec3(0, 0, 0), vec3(5, 5, 5));
+	CreateObject("Main Plane", "SimplePlane", "VikingRoom", planeTransform);
 
 	Helper::Cout("Game Loop", true);
 	Update();
@@ -52,9 +55,10 @@ Game::~Game()
 	}
 }
 
-void Game::CreateObject(string objName, string modelName, string materialFolderName, bool sort)
+void Game::CreateObject(string objName, string modelName, string materialFolderName, Transform transform, bool sort)
 {
 	GameObject* newObj = new GameObject(objName, fileManager->FindMesh(modelName), fileManager->FindMaterial(materialFolderName));
+	newObj->GetTransform()->SetTransform(transform);
 	vector<GameObject*>::iterator location = upper_bound(gameObjects.begin(), gameObjects.end(), newObj);
 	gameObjects.insert(location, newObj);
 

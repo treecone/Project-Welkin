@@ -4,8 +4,8 @@ void Input::InitInput(WkWindow* window)
 {
 	this->wWindow = window;
 
-	memset(kbState, 0, sizeof(unsigned char) * 256);
-	memset(prevKbState, 0, sizeof(unsigned char) * 256);
+	memset(kbState, 0, sizeof(unsigned char) * 512);
+	memset(prevKbState, 0, sizeof(unsigned char) * 512);
 
 	glfwSetKeyCallback(wWindow->GetWindow(), key_callback);
 	glfwSetMouseButtonCallback(wWindow->GetWindow(), mouse_button_callback);
@@ -30,8 +30,8 @@ Input::~Input()
 void Input::Update()
 {
 	// Copy the old keys so we have last frame's data
-	memcpy(prevKbState, kbState, sizeof(unsigned char) * 256);
-	memcpy(prevMouseState, mouseState, sizeof(unsigned char) * 256);
+	memcpy(prevKbState, kbState, sizeof(unsigned char) * 512);
+	memcpy(prevMouseState, mouseState, sizeof(unsigned char) * 512);
 
 	// Save the previous mouse position, then the current mouse 
 	// position and finally calculate the change from the previous frame
@@ -63,7 +63,7 @@ void Input::EndOfFrame()
 // 'a' or ' VK_ESCAPE or VK_SHIFT'
 bool Input::KeyDown(int key)
 {
-	if (key < 0 || key > 255) return false;
+	if (key < 0 || key > 512) return false;
 	//TODO use bitwise to calculate faster
 	return kbState[key] != 0 && !guiWantsKeyboard;
 }
@@ -71,14 +71,14 @@ bool Input::KeyDown(int key)
 
 bool Input::KeyUp(int key)
 {
-	if (key < 0 || key > 255) return false;
+	if (key < 0 || key > 512) return false;
 
 	return kbState[key] == 0 && !guiWantsKeyboard;
 }
 
 bool Input::KeyPress(int key)
 {
-	if (key < 0 || key > 255) return false;
+	if (key < 0 || key > 512) return false;
 
 	return
 		kbState[key] != 0 &&			// Down now
@@ -88,7 +88,7 @@ bool Input::KeyPress(int key)
 
 bool Input::KeyRelease(int key)
 {
-	if (key < 0 || key > 255) return false;
+	if (key < 0 || key > 512) return false;
 
 	return
 		kbState[key] == 0 &&	// Up now
@@ -112,7 +112,7 @@ bool Input::KeyRelease(int key)
 // ----------------------------------------------------------
 bool Input::GetKeyArray(bool* keyArray, int size)
 {
-	if (size <= 0 || size > 256) return false;
+	if (size <= 0 || size > 512) return false;
 
 	// Loop through the given size and fill the
 	// boolean array.  Note that the double exclamation

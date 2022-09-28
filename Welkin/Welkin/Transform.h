@@ -14,6 +14,7 @@ class Transform
 {
 public:
 	Transform();
+	Transform(vec3 pos, vec3 rotation, vec3 scale);
 
 	void MoveAbsolute(float x, float y, float z);
 	void MoveRelative(float x, float y, float z);
@@ -29,6 +30,8 @@ public:
 	vec3 GetPosition();
 	vec3 GetPitchYawRoll();
 	vec3 GetScale();
+
+	void SetTransform(Transform transform);
 
 	mat4 GetWorldMatrix();
 	mat4 GetWorldInverseTransposeMatrix();
@@ -65,8 +68,6 @@ private:
 
 	//Helper for conversions
 	vec3 QuaterionToEuler(quat quaterion);
-
-
 
 };
 

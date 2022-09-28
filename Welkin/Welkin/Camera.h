@@ -5,7 +5,7 @@
 class Camera
 {
 public:
-	Camera(float moveSpeed, float mouseLookSpeed, float aspectRatio, float nearPlane, float farPlane);
+	Camera(float moveSpeed, float mouseLookSpeed, float fov, float aspectRatio, float nearPlane, float farPlane);
 	~Camera();
 
 	void SetFOV(float fov) { FOV = fov; };

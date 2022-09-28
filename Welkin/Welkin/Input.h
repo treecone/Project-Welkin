@@ -60,8 +60,8 @@ private:
 	bool guiWantsMouse;
 };
 
-static unsigned char kbState[sizeof(unsigned char) * 256];
-static unsigned char prevKbState[sizeof(unsigned char) * 256];
+static unsigned char kbState[sizeof(unsigned char) * 512];
+static unsigned char prevKbState[sizeof(unsigned char) * 512];
 
 static unsigned char mouseState[sizeof(unsigned char) * 256];
 static unsigned char prevMouseState[sizeof(unsigned char) * 256];
