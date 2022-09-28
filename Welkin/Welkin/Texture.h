@@ -4,8 +4,9 @@
 #include <stdexcept>
 #include <stb_image.h>
 
-struct Texture
+class Texture
 {
+public:
 	stbi_uc* pixels;
 	int texWidth, texHeight, texChannels;
 	VkDeviceSize imageSize;

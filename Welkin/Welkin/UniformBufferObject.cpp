@@ -74,7 +74,7 @@ void UniformBufferObject::UpdateUniformBuffer(unsigned short currentFrame)
 		perFrameData.proj = mainCamera->GetProjection();
 
 		mainCamera->UpdateViewMatrix();
-		perFrameData.proj = mainCamera->GetView();
+		perFrameData.view = mainCamera->GetView();
 
 		void* data;
 		vkMapMemory(*device, uniformBuffersMemory[currentFrame], 0, sizeof(UboPerFrame), 0, &data);

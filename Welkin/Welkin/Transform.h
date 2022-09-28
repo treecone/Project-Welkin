@@ -7,6 +7,8 @@
 
 using namespace glm;
 
+#define GLM_FORCE_CTOR_INIT
+
 
 class Transform
 {

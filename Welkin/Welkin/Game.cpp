@@ -43,7 +43,7 @@ Game::~Game()
 	delete mainCamera;
 	delete vCore;
 	//delete imGui;
-	///delete input;
+	//delete input;
 	delete mainWindow;
 
 	for (auto& gameObject : gameObjects)
@@ -77,8 +77,11 @@ void Game::Update()
 			Input::GetInstance().Update();
 			mainCamera->Update((float)deltaTime);
 
-			const int rotateSpeed = 2;
-			gameObjects[0]->GetTransform()->Rotate(0, 0, rotateSpeed * (float)deltaTime);
+			if (Input::GetInstance().KeyDown(GLFW_KEY_P))
+			{
+				const float rotateSpeed = 0.1f;
+				gameObjects[0]->GetTransform()->Rotate(0, 0, rotateSpeed * (float)deltaTime);
+			}
 
 			for (auto& gameObj : gameObjects)
 			{

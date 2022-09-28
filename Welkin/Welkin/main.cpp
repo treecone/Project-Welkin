@@ -1,4 +1,3 @@
-#define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
 
@@ -8,9 +7,12 @@
 #include<iostream>
 #include <stdexcept>
 
+#define _CRTDBG_MAP_ALLOC
+
 int main()
 {
 	Game game{};
+	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	try
 	{
@@ -20,10 +22,8 @@ int main()
 	catch(const std::exception &e)
 	{
 		std::cerr << e.what() << endl;
-		_CrtDumpMemoryLeaks();
 		return EXIT_FAILURE;
 	}
 
-	_CrtDumpMemoryLeaks();
 	return EXIT_SUCCESS;
 }

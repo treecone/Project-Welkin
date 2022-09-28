@@ -1,6 +1,5 @@
 #include "Texture.h"
 
-
 Texture::Texture(std::string PATH)
 {
 	stbi_uc* pixels = stbi_load(PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -15,5 +14,4 @@ Texture::Texture(std::string PATH)
 Texture::~Texture()
 {
 	delete pixels;
-	pixels = nullptr;
 }

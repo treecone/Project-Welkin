@@ -6,6 +6,7 @@ Camera::Camera(float moveSpeed, float mouseLookSpeed, float aspectRatio, float n
 {
 	transform = Transform();
 	UpdateViewMatrix();
+	SetFOV(90.0f);
 	UpdateProjectionMatrix();
 	Helper::Cout("Created the main camera!");
 }
@@ -43,20 +44,35 @@ void Camera::Update(float dt)
 		Helper::Cout("Camera Position: " + std::to_string(temp.x) + "," + std::to_string(temp.y) + "," + std::to_string(temp.z));
 
 	}
+
+	if (Input::GetInstance().KeyDown(GLFW_KEY_F))
+	{
+		FOV += 0.1f;
+		Helper::Cout(std::to_string(FOV));
+	}
+	else if (Input::GetInstance().KeyDown(GLFW_KEY_V))
+	{
+		FOV -= 0.1f;
+		Helper::Cout(std::to_string(FOV));
+	}
 }
 
 void Camera::UpdateViewMatrix()
 {
+	viewMatrix = mat4(1.0f);
+	transform.UpdateMatrices();
 	viewMatrix = transform.GetWorldMatrix();
 }
 
 void Camera::UpdateViewMatrix(Transform* objToLookAt)
 {
+	viewMatrix = mat4(1.0f);
 	viewMatrix = glm::lookAt(transform.GetPosition(), objToLookAt->GetPosition(), glm::vec3(0, 1, 0));
 }
 
 void Camera::UpdateProjectionMatrix()
 {
+	projMatrix = mat4(1.0f);
 	projMatrix = glm::perspective(FOV, aspectRatio, nearPlane, farPlane);
 	//GLM was for OpenGL, where the y coords of the clip coords are flipped
 	projMatrix[1][1] *= -1;

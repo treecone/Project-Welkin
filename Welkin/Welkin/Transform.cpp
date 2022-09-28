@@ -93,10 +93,10 @@ void Transform::UpdateMatrices()
 {
 	if (matricesDirty)
 	{
-		mat4 worldMatrix = mat4();
+		mat4 worldMatrix = mat4(1.0f);
 
-		mat4 translationMatrix = translate(worldMatrix, position);
-		mat4 scaleMatrix = glm::scale(worldMatrix, scale);
+		mat4 translationMatrix = translate(mat4(1.0f), position);
+		mat4 scaleMatrix = glm::scale(mat4(1.0f), scale);
 		mat4 rotationMatrix = glm::eulerAngleXYZ(eulerAngles.x, eulerAngles.y, eulerAngles.z);
 
 		//TODO right order?

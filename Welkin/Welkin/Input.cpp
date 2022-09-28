@@ -22,12 +22,8 @@ void Input::InitInput(WkWindow* window)
 
 Input::~Input()
 {
-	//delete[] kbState;
-	//delete[] prevKbState;
-
-	//delete[] mouseState;
-	//delete[] prevMouseState;
-	//delete wheelDelta;
+	//TODO do you need this with the auto setup I have enabled?
+	//_CrtDumpMemoryLeaks();
 }
 
 

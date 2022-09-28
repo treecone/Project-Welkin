@@ -38,7 +38,6 @@ VulkanCore::~VulkanCore()
 	vkDestroyDevice(device, nullptr);
 	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);
-
 }
 
 
