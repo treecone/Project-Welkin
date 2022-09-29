@@ -801,7 +801,6 @@ void VulkanCore::SetWindowSize(int width, int height)
 		#pragma endregion
 
 		#pragma region Rasterizer
-
 			//Depth, linewidth, face culling, depthclamp cull, polygon mode
 			VkPipelineRasterizationStateCreateInfo rasterizer{};
 			rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -816,7 +815,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 			//Cull Front-back, or both, or neither
 			//TODO change this to Vk cull mode back bit 
-			rasterizer.cullMode = VK_CULL_MODE_NONE;
+			rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
 			rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
 			rasterizer.depthBiasEnable = VK_FALSE;

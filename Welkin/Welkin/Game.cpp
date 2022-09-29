@@ -35,6 +35,9 @@ void Game::Init()
 	Transform planeTransform(vec3(0, 0, 0), vec3(0, 0, 0), vec3(5, 5, 5));
 	CreateObject("Main Plane", "SimplePlane", "VikingRoom", planeTransform);
 
+	Transform cubeTransform(vec3(3, 0, 0), vec3(0, 0, 0), vec3(2, 5, 1));
+	CreateObject("Smooth Cube", "(HighPoly)SmoothCube", "VikingRoom", cubeTransform);
+
 	Helper::Cout("Game Loop", true);
 	Update();
 }
