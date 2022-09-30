@@ -1,6 +1,6 @@
 #include "Input.h"
 
-void Input::InitInput(WkWindow* window)
+Input::Input(WkWindow* window)
 {
 	this->wWindow = window;
 

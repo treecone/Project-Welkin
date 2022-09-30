@@ -13,14 +13,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <unordered_map>
 #include <array>
-#include "FileManager.h"
 #include <string>
-#include "Vertex.h"
-#include "GameObject.h"
-#include <algorithm>
 #include <optional>
+#include <algorithm>
+
 #include "Helper.h"
-#include "UniformBufferObject.h"
+
 
 const short MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -28,7 +26,7 @@ class VulkanCore
 {
 public:
 
-	VulkanCore(GLFWwindow* window, FileManager* fm, vector<GameObject*>* gameObjects, Camera* mainCamera);
+	VulkanCore(GLFWwindow* window);
 	~VulkanCore();
 
 	//Window resizing
@@ -39,33 +37,31 @@ public:
 	VkDevice* GetLogicalDevice();
 	VkPhysicalDevice* GetPhysicalDevice();
 	//Graphics = 0, Transfer = 1
-	VkCommandPool* GetCommandPool(int type);
-	Camera* GetCamera() { return this->mainCamera; };
-	VkRenderPass* GetRenderPass() { return &this->renderPass; };
 	VkInstance* GetInstance() { return &this->instance; };
 	//0 - Graphics, 1 - presentation, 2 - transfer
 	VkQueue* GetQueue(int type);
-	size_t GetFramebufferCount() { return this->swapChainFramebuffers.size(); };
 	VkFormat GetSwapchainImageFormat() { return this->swapChainImageFormat; };
+	std::vector<VkFramebuffer>* GetSwapchainFramebuffers() { return &this->swapChainFramebuffers; };
+	size_t GetFramebufferCount() { return this->swapChainFramebuffers.size(); };
+	//0 - Graphics, 1 - transfer
+	VkCommandPool* GetCommandPool(int type);
+	VkSwapchainKHR* GetSwapchain() { return &this->swapChain; };
+	VkExtent2D* GetSwapchainExtent() { return &this->swapChainExtent; };
 
-	//Buffers
-	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
+	//Called from renderer
+	void CreateFrameBuffers(VkRenderPass* renderPass = nullptr);
+	void RecreateSwapChain();
 
-	//Drawing
-	void DrawFrame();
-	unsigned short currentFrame = 0;
 
-	//Buffers
-	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+#pragma region Buffers
+	void CreateBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage, const VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void CopyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size);
+	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+	uint32_t FindMemoryType(const uint32_t type_filter, const VkMemoryPropertyFlags properties);
+#pragma endregion
 
 
 private:
-
-	vector<GameObject*>* gameObjects;
-	FileManager* fm;
-	Camera* mainCamera;
-
 #pragma region Setup
 
 	VkInstance instance;
@@ -75,6 +71,8 @@ private:
 	VkDevice device;
 	//Pointer to the GLFW window we created
 	GLFWwindow* window;
+	//Taken from renderer
+	VkRenderPass* currentRenderPass;
 
 
 	//Queues ---------
@@ -137,6 +135,8 @@ private:
 	VkFormat swapChainImageFormat;
 	//Holds the actual resolution of the swap chain in pixels 
 	VkExtent2D swapChainExtent;
+	//Holds the attachments for the swinchain
+	std::vector<VkFramebuffer> swapChainFramebuffers;
 
 
 
@@ -146,7 +146,6 @@ private:
 	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	void CreateImageViews();
-	void RecreateSwapChain();
 	void CleanupSwapChain();
 
 
@@ -164,51 +163,9 @@ private:
 
 #pragma endregion
 
-#pragma region Pipeline/Passes
-
-	void CreateGraphicsPipeline();
-	void CreateRenderPass();
-	void CreateFrameBuffers();
-
-	VkRenderPass renderPass;
-	VkPipeline graphicsPipeline;
-	VkPipelineLayout pipelineLayout;
-	std::vector<VkFramebuffer> swapChainFramebuffers;
-
-	//Commands ---------------
-
 	void CreateCommandPools();
-	void CreateCommandBuffers(VkCommandPool pool);
-	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-
-	std::vector<VkCommandBuffer> mainCommandBuffers;
 	VkCommandPool graphicsCommandPool;
 	VkCommandPool transferCommandPool;
-
-#pragma endregion
-
-#pragma region DrawFrame and Sync Objects
-
-	void CreateSyncObjects();
-	std::vector<VkSemaphore> imageAvailableSemaphores;
-	std::vector<VkSemaphore> renderFinishedSemaphores;
-	std::vector<VkFence> inFlightFences;
-#pragma endregion
-
-#pragma region Buffers
-
-	vector<UniformBufferObject*> allUniformBufferObjects;
-
-	struct PushConstants
-	{
-		//TODO transfer to storage buffer 
-		//aka model->world matrix
-		alignas(16) mat4 world; //64 bits
-		alignas(16) mat4 worldInverseTranspose;
-
-		//unsigned short materialID;
-	};
-#pragma endregion
 
 };
 

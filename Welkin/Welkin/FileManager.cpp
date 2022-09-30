@@ -1,12 +1,6 @@
 #include "FileManager.h"
-#include "VulkanCore.h"
 
-FileManager::FileManager()
-{
-
-}
-
-void FileManager::Init(VulkanCore* vCore)
+FileManager::FileManager(VulkanCore* vCore)
 {
     Helper::Cout("File Manager", true);
     this->vCore = vCore;
@@ -245,8 +239,7 @@ std::pair<string, unsigned short> FileManager::LoadTexturesFromFolder(string fol
 
 void FileManager::CreateMaterial(string folderMaterialName, bool loadTexturesFromFolder)
 {
-    Helper::Cout("");
-    Helper::Cout("Creating Material for " + folderMaterialName);
+    Helper::Cout("\r Creating Material for " + folderMaterialName);
 
     string fileName = "";
     int numberOfTextures = 0;

@@ -1,10 +1,9 @@
 #include "UniformBufferObject.h"
-#include "VulkanCore.h"
 
 //Good img explaining UBO's - https://vkguide.dev/docs/chapter-4/descriptors/
 
 UniformBufferObject::UniformBufferObject(uBufferType bufferType, VulkanCore* vCore, Camera* mainCamera)
-	: bufferType{ bufferType }, mainCamera{mainCamera}, CreateBuffer{CreateBuffer}, vCore {vCore}
+	: bufferType{ bufferType }, mainCamera{mainCamera}, vCore {vCore}
 {
 	Helper::Cout("Creating Uniform Buffer");
 	device = vCore->GetLogicalDevice();
@@ -120,7 +119,7 @@ void UniformBufferObject::CreateDescriptorSets()
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 
-	int sizeOfCorrespondingStruct;
+	size_t sizeOfCorrespondingStruct{};
 
 	switch (bufferType)
 	{

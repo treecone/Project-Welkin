@@ -15,18 +15,15 @@
 #include "PBRMaterial.h"
 #include "Helper.h"
 #include "Mesh.h"
+#include "VulkanCore.h"
 
 namespace fs = std::filesystem;
-
-class VulkanCore;
 
 class FileManager
 {
 public:
-	FileManager();
+	FileManager(VulkanCore* vCore);
 	~FileManager();
-
-	void Init(VulkanCore* vCore);
 
 	Mesh* FindMesh(string name);
 	Material* FindMaterial(string name);

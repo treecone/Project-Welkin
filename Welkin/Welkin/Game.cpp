@@ -7,27 +7,49 @@ Game::Game()
 
 void Game::Init()
 {
-	mainWindow = new WkWindow{ WIDTH, HEIGHT, "Main Welkin Window" };
-
-	fileManager = new FileManager();
-
-	//Camera
-	const float nearPlane = 0.1f;
-	const float farPlane = 1000;
-
-	mainCamera = new Camera(3.0f, 1.0f, 45, (float)WIDTH / (float)HEIGHT, nearPlane, farPlane);
-	mainCamera->GetTransform()->SetPosition(0, 0, -10);
-
 	Helper::Cout("Game Initalization", true);
 
-	//Init's the vulkan core
-	vCore = new VulkanCore(mainWindow->GetWindow(), fileManager, &gameObjects, mainCamera);
+	mainWindow = new WkWindow{ WIDTH, HEIGHT, "Main Welkin Window" };
 
-	//input = new Input();
-	Input::GetInstance().InitInput(mainWindow);
+	input = new Input(mainWindow);
+
+	mainCamera = new Camera(3.0f, 1.0f, 45, (float)WIDTH / (float)HEIGHT, 0.1f, 1000, input);
+	mainCamera->GetTransform()->SetPosition(0, 0, -10);
+
+	vCore = new VulkanCore(mainWindow->GetWindow());
+
+	fileManager = new FileManager(vCore);
+
+	renderer = new Renderer(vCore, fileManager, mainCamera, &gameObjects);
+
 
 	//imGui = new ImGUI(vCore, mainWindow, input);
 
+	AssetCreation();
+
+	Update();
+}
+
+Game::~Game()
+{
+	//Clean up all other vulkan resources before
+	delete fileManager;
+	delete mainCamera;
+	delete renderer;
+	delete vCore;
+	//delete imGui;
+	delete input;
+	delete mainWindow;
+
+	for (auto& gameObject : gameObjects)
+	{
+		delete gameObject;
+	}
+}
+
+void Game::AssetCreation()
+{
+	Helper::Cout("Asset Creation", true);
 
 	//TODO change the naming conventions of models and materials
 	CreateObject("Viking Cone", "Pyramid", "VikingRoom");
@@ -37,25 +59,6 @@ void Game::Init()
 
 	Transform cubeTransform(vec3(3, 0, 0), vec3(0, 0, 0), vec3(2, 5, 1));
 	CreateObject("Smooth Cube", "(HighPoly)SmoothCube", "VikingRoom", cubeTransform);
-
-	Helper::Cout("Game Loop", true);
-	Update();
-}
-
-Game::~Game()
-{
-	//Clean up all other vulkan resources before
-	delete fileManager;
-	delete mainCamera;
-	delete vCore;
-	//delete imGui;
-	//delete input;
-	delete mainWindow;
-
-	for (auto& gameObject : gameObjects)
-	{
-		delete gameObject;
-	}
 }
 
 void Game::CreateObject(string objName, string modelName, string materialFolderName, Transform transform, bool sort)
@@ -72,6 +75,7 @@ void Game::CreateObject(string objName, string modelName, string materialFolderN
 
 void Game::Update()
 {
+	Helper::Cout("Game Loop", true);
 
 	while (!mainWindow->shouldClose())
 	{
@@ -81,10 +85,10 @@ void Game::Update()
 		//MAIN LOOP
 		{ 
 			glfwPollEvents();
-			Input::GetInstance().Update();
+			input->Update();
 			mainCamera->Update((float)deltaTime);
 
-			if (Input::GetInstance().KeyDown(GLFW_KEY_P))
+			if (input->KeyDown(GLFW_KEY_P))
 			{
 				const float rotateSpeed = 0.1f;
 				gameObjects[0]->GetTransform()->Rotate(0, 0, rotateSpeed * (float)deltaTime);
@@ -103,10 +107,10 @@ void Game::Update()
 				{
 					Helper::Cout("Begining to draw frame!");
 				}
-				vCore->DrawFrame();
+				renderer->DrawFrame();
 			}
 
-			Input::GetInstance().EndOfFrame();
+			input->EndOfFrame();
 		}
 		
 
@@ -130,4 +134,10 @@ void Game::Update()
 void Game::SortObjectsByMaterial()
 {
 	std::sort(gameObjects.begin(), gameObjects.end());
+}
+
+void Game::SetScreenResolution(int width, int height)
+{
+	vCore->framebufferResized = true;
+	//TODO set this up
 }

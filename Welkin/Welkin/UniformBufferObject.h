@@ -3,6 +3,7 @@
 #include <vector>
 #include "Camera.h"
 #include "Helper.h"
+#include "VulkanCore.h"
 
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
@@ -29,8 +30,6 @@ struct UboPerMaterial
 };
 #pragma endregion
 
-class VulkanCore;
-
 class UniformBufferObject
 {
 public:
@@ -47,7 +46,7 @@ private:
 	VulkanCore* vCore;
 	VkDevice* device;
 	Camera* mainCamera;
-	void (*CreateBuffer)(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&);
+	//void (*CreateBuffer)(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&);
 	uBufferType bufferType;
 
 	//TODO Find a better way to do this, like using a generic or smth

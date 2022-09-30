@@ -26,15 +26,8 @@ void WkWindow::InitWindow()
 	Helper::Cout("Created Window: " + windowName);
 	window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
 	glfwSetWindowUserPointer(window, this);
-	glfwSetFramebufferSizeCallback(window, FrameBufferResizeCallback);
 	Helper::Cout("Window Created");
 }
-
-void WkWindow::SetVCore(VulkanCore* core)
-{
-	this->vCore = core;
-}
-
 GLFWwindow* WkWindow::GetWindow()
 {
 	return this->window;
@@ -45,15 +38,9 @@ string WkWindow::GetWindowName()
 	return this->windowName;
 }
 
-vec2 WkWindow::GetMousePos()
+glm::vec2 WkWindow::GetMousePos()
 {
 	double x, y;
 	glfwGetCursorPos(this->window, &x, &y);
-	return vec2(x, y);
-}
-
-void WkWindow::FrameBufferResizeCallback(GLFWwindow* window, int width, int height)
-{
-	auto app = reinterpret_cast<VulkanCore*>(glfwGetWindowUserPointer(window));
-	app->framebufferResized = true;
+	return glm::vec2(x, y);
 }

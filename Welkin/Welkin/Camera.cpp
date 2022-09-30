@@ -1,10 +1,8 @@
 #include "Camera.h"
-#include "Input.h"
 
-Camera::Camera(float moveSpeed, float mouseLookSpeed, float fov, float aspectRatio, float nearPlane, float farPlane):
-	movementSpeed{ moveSpeed }, mouseLookSpeed{ mouseLookSpeed }, FOV{fov}, nearPlane {
-	nearPlane
-}, farPlane{ farPlane }, aspectRatio{ aspectRatio }
+Camera::Camera(float moveSpeed, float mouseLookSpeed, float fov, float aspectRatio, float nearPlane, float farPlane, Input* input):
+	movementSpeed{ moveSpeed }, mouseLookSpeed{ mouseLookSpeed }, FOV{fov}, nearPlane {nearPlane}, farPlane{ farPlane }, aspectRatio{ aspectRatio },
+	input{input}
 {
 	transform = Transform();
 	UpdateViewMatrix();
@@ -20,49 +18,49 @@ Camera::~Camera()
 void Camera::Update(float dt)
 {
 	float speed = 0.1f;
-	if (Input::GetInstance().KeyDown(GLFW_KEY_W))
+	if (input->KeyDown(GLFW_KEY_W))
 	{
 		this->transform.MoveAbsolute(0, 0, speed * dt);
 		glm::vec3 temp = transform.GetPosition();
 		Helper::Cout("Camera Position: " + std::to_string(temp.x) + "," + std::to_string(temp.y) + "," + std::to_string(temp.z));
 	}
-	if (Input::GetInstance().KeyDown(GLFW_KEY_S))
+	if (input->KeyDown(GLFW_KEY_S))
 	{
 		this->transform.MoveAbsolute(0, 0, -speed * dt);
 		glm::vec3 temp = transform.GetPosition();
 		Helper::Cout("Camera Position: " + std::to_string(temp.x) + "," + std::to_string(temp.y) + "," + std::to_string(temp.z));
 	}
-	if (Input::GetInstance().KeyDown(GLFW_KEY_A))
+	if (input->KeyDown(GLFW_KEY_A))
 	{
 		this->transform.MoveAbsolute(speed * dt, 0, 0);
 		glm::vec3 temp = transform.GetPosition();
 		Helper::Cout("Camera Position: " + std::to_string(temp.x) + "," + std::to_string(temp.y) + "," + std::to_string(temp.z));
 	}
-	if (Input::GetInstance().KeyDown(GLFW_KEY_D))
+	if (input->KeyDown(GLFW_KEY_D))
 	{
 		this->transform.MoveAbsolute(-speed * dt,0 , 0);
 		glm::vec3 temp = transform.GetPosition();
 		Helper::Cout("Camera Position: " + std::to_string(temp.x) + "," + std::to_string(temp.y) + "," + std::to_string(temp.z));
 	}
-	if (Input::GetInstance().KeyDown(GLFW_KEY_SPACE))
+	if (input->KeyDown(GLFW_KEY_SPACE))
 	{
 		this->transform.MoveAbsolute(0, -speed * dt, 0);
 		glm::vec3 temp = transform.GetPosition();
 		Helper::Cout("Camera Position: " + std::to_string(temp.x) + "," + std::to_string(temp.y) + "," + std::to_string(temp.z));
 	}
-	if (Input::GetInstance().KeyDown(GLFW_KEY_LEFT_CONTROL))
+	if (input->KeyDown(GLFW_KEY_LEFT_CONTROL))
 	{
 		this->transform.MoveAbsolute(0, speed * dt, 0);
 		glm::vec3 temp = transform.GetPosition();
 		Helper::Cout("Camera Position: " + std::to_string(temp.x) + "," + std::to_string(temp.y) + "," + std::to_string(temp.z));
 	}
 
-	if (Input::GetInstance().KeyDown(GLFW_KEY_F))
+	if (input->KeyDown(GLFW_KEY_F))
 	{
 		FOV += 0.1f;
 		Helper::Cout(std::to_string(FOV));
 	}
-	else if (Input::GetInstance().KeyDown(GLFW_KEY_V))
+	else if (input->KeyDown(GLFW_KEY_V))
 	{
 		FOV -= 0.1f;
 		Helper::Cout(std::to_string(FOV));

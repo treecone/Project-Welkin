@@ -5,18 +5,8 @@
 class Input
 {
 public:
-	static Input& GetInstance()
-	{
-		static Input    instance; // Guaranteed to be destroyed.
-		// Instantiated on first use.
-		return instance;
-	}
-
-	//Input(WkWindow* wWindow);
+	Input(WkWindow* wWindow);
 	~Input();
-
-	Input(Input const&) = delete;
-	void operator=(Input const&) = delete;
 
 	void Update();
 	void EndOfFrame();

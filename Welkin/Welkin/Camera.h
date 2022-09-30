@@ -1,11 +1,12 @@
 #pragma once
 #include "Transform.h"
 #include "Helper.h"
+#include "Input.h"
 
 class Camera
 {
 public:
-	Camera(float moveSpeed, float mouseLookSpeed, float fov, float aspectRatio, float nearPlane, float farPlane);
+	Camera(float moveSpeed, float mouseLookSpeed, float fov, float aspectRatio, float nearPlane, float farPlane, Input* input);
 	~Camera();
 
 	void SetFOV(float fov) { FOV = fov; };
@@ -20,6 +21,7 @@ public:
 	Transform* GetTransform() { return &this->transform; }
 
 private:
+	Input* input;
 
 	glm::mat4 viewMatrix;
 	glm::mat4 projMatrix;
