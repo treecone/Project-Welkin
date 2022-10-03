@@ -138,6 +138,6 @@ void Game::SortObjectsByMaterial()
 
 void Game::SetScreenResolution(int width, int height)
 {
-	vCore->framebufferResized = true;
+	vCore->SetWindowSize(width, height);
 	//TODO set this up
 }

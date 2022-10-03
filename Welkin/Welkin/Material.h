@@ -4,15 +4,21 @@
 #include "Texture.h"
 #include <string>
 #include <glm/glm.hpp>
+#include "VulkanCore.h"
 
 class Material
 {
 public:
-	Material(Texture* color, std::string materialName, VkDevice* device, glm::vec2 uvScale);
-	virtual void CreateBuffers(VkDevice* device);
+	Material(Texture* color, std::string materialName, VulkanCore* vCore, glm::vec2 uvScale);
 	std::string GetMaterialName() { return this->materialName; };
+	VkSampler* GetSampler() { return &this->textureSampler; };
 	virtual ~Material();
 protected:
+	void CreateTextureSampler();
+
+	VulkanCore* vCore;
+	VkSampler textureSampler;
+
 
 	//Perameters
 	std::string materialName;

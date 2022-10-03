@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <stb_image.h>
 #include "VulkanCore.h"
+#include "Helper.h"
 
 class Texture
 {
@@ -16,8 +17,12 @@ public:
 	~Texture();
 
 private:
-	void CreateBuffers(VulkanCore* vCore);
+	VulkanCore* vCore;
+
+	void CreateBuffers();
+	void CreateTextureImageView();
 
 	VkImage textureImage;
+	VkImageView textureImageView;
 	VkDeviceMemory textureImageMemory;
 };

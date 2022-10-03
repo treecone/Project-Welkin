@@ -47,17 +47,22 @@ public:
 	VkCommandPool* GetCommandPool(int type);
 	VkSwapchainKHR* GetSwapchain() { return &this->swapChain; };
 	VkExtent2D* GetSwapchainExtent() { return &this->swapChainExtent; };
+	VkPhysicalDeviceProperties GetPhysicalDeviceProperties();
 
 	//Called from renderer
 	void CreateFrameBuffers(VkRenderPass* renderPass = nullptr);
 	void RecreateSwapChain();
 
 
-#pragma region Buffers
+#pragma region Buffers/Images
+
 	void CreateBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage, const VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void CopyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size);
 	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	uint32_t FindMemoryType(const uint32_t type_filter, const VkMemoryPropertyFlags properties);
+	void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+	VkImageView CreateImageView(VkImage image, VkFormat format);
 #pragma endregion
 
 
@@ -166,6 +171,12 @@ private:
 	void CreateCommandPools();
 	VkCommandPool graphicsCommandPool;
 	VkCommandPool transferCommandPool;
+
+#pragma region Buffers
+	VkCommandBuffer BeginSingleTimeCommands(VkCommandPool pool);
+	void EndSingleTimeCommands(VkCommandBuffer commandBuffer, VkQueue queue, VkCommandPool pool);
+#pragma endregion
+
 
 };
 
