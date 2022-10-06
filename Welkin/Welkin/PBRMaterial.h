@@ -14,4 +14,3 @@ private:
 	Texture* tex_Normal;
 
 };
-

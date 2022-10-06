@@ -1,7 +1,7 @@
 #include "Material.h"
 
-Material::Material(Texture* color, std::string materialName, VulkanCore* vCore, glm::vec2 uvScale)
-	: tex_Color {color}, materialName {materialName}, uvScale {uvScale}, vCore{vCore}
+Material::Material(Texture* color, std::string materialName, VulkanCore* vCore, glm::vec2 uvScale, unsigned short textureStart, unsigned char textureLength)
+	: tex_Color {color}, materialName {materialName}, uvScale {uvScale}, vCore{vCore}, textureStart{textureStart}, numberOfTextures{numberOfTextures}
 {
 	CreateTextureSampler();
 }
