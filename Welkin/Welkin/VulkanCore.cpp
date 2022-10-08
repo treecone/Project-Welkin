@@ -127,7 +127,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 			appInfo.pEngineName = "Welkin Engine";
 			appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-			appInfo.apiVersion = VK_API_VERSION_1_0;
+			appInfo.apiVersion = VK_API_VERSION_1_1;
 		#pragma endregion
 
 		//Tells vulkan what global extensions and validation layers we want to use
@@ -269,6 +269,17 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 			VkPhysicalDeviceFeatures deviceFeatures; //TODO call device features only oncec
 			vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
+
+			//Indexing - aka bindless descriptors
+			VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures{};
+			indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+			indexingFeatures.pNext = nullptr;
+
+			VkPhysicalDeviceFeatures2 deviceFeatures2{};
+			deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+			deviceFeatures2.pNext = &indexingFeatures;
+			vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures2);
+
 		#pragma endregion
 
 		QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
@@ -283,7 +294,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			swapchainAdequate = !swapchainSupport.formats.empty() && !swapchainSupport.presentModes.empty();
 		}
 
-		if (indices.isComplete() && extensionsSupported && swapchainAdequate && deviceFeatures.samplerAnisotropy)
+		if (indices.isComplete() && extensionsSupported && swapchainAdequate && deviceFeatures.samplerAnisotropy && indexingFeatures.descriptorBindingPartiallyBound && indexingFeatures.runtimeDescriptorArray)
 		{
 			score += 1000;
 		}
@@ -389,13 +400,24 @@ void VulkanCore::SetWindowSize(int width, int height)
 		#pragma region PhysicalDeviceFeatures
 			VkPhysicalDeviceFeatures deviceFeatures{};
 			deviceFeatures.samplerAnisotropy = VK_TRUE;
-
 		#pragma endregion
+
+		#pragma region Indexing - aka Bindless Descriptors
+			VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures{};
+			indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+			indexingFeatures.pNext = nullptr;
+			indexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+			indexingFeatures.runtimeDescriptorArray = VK_TRUE;
+		#pragma endregion
+
 
 		#pragma region Device Create Info
 
 			VkDeviceCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+			//Indexing 
+			createInfo.pNext = &indexingFeatures;
 
 			createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 			createInfo.pQueueCreateInfos = queueCreateInfos.data();
@@ -414,6 +436,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			{
 				createInfo.enabledLayerCount = 0;
 			}
+
 
 		#pragma endregion
 
@@ -934,7 +957,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 	void VulkanCore::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
-		VkCommandBuffer commandBuffer = BeginSingleTimeCommands(transferCommandPool);
+		VkCommandBuffer commandBuffer = BeginSingleTimeCommands(graphicsCommandPool);
 		
 		#pragma region Barrier
 			VkImageMemoryBarrier barrier{};
@@ -979,7 +1002,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 			vkCmdPipelineBarrier(
 				commandBuffer,
-				0 /* TODO */, 0 /* TODO */,
+				sourceStage, destinationStage,
 				0,
 				0, nullptr,
 				0, nullptr,
@@ -989,7 +1012,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 		
 
-		EndSingleTimeCommands(commandBuffer, transferQueue, transferCommandPool);
+		EndSingleTimeCommands(commandBuffer, graphicsQueue, graphicsCommandPool);
 	}
 
 	void VulkanCore::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
@@ -1034,6 +1057,11 @@ void VulkanCore::SetWindowSize(int width, int height)
 		}
 
 		return imageView;
+	}
+
+	void VulkanCore::CreateDescriptorsForTextures()
+	{
+
 	}
 
 #pragma endregion

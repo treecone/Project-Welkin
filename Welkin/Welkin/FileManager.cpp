@@ -4,6 +4,7 @@ FileManager::FileManager(VulkanCore* vCore)
 {
     Helper::Cout("File Manager", true);
     this->vCore = vCore;
+	totalTexturesLoaded = 0;
     this->device = vCore->GetLogicalDevice();
     
     try
@@ -195,8 +196,9 @@ void FileManager::LoadAllTextures(VkDevice* logicalDevice)
         {
             if (entity.path().extension() == ext)
             {
-                pair<string, Texture*> newTex(rawName, new Texture(entity.path().string()));
+                pair<string, Texture*> newTex(rawName, new Texture(entity.path().string(), vCore, totalTexturesLoaded));
                 allTextures.insert(newTex);
+				totalTexturesLoaded++;
                 Helper::Cout("-- Loaded Texture: " + fileName);
             }
         }
@@ -221,8 +223,8 @@ std::pair<string, unsigned short> FileManager::LoadTexturesFromFolder(string fol
         {
             if (entity.path().extension() == ext)
             {
-                pair<string, Texture*> newTex(rawName, new Texture(entity.path().string()));
-                allTextures.insert(newTex);
+				pair<string, Texture*> newTex(rawName, new Texture(entity.path().string(), vCore, totalTexturesLoaded));
+				allTextures.insert(newTex);
                 Helper::Cout("-- Loaded Texture: " + fileName);
 
                 numberOfTextures++;
@@ -300,12 +302,12 @@ void FileManager::CreateMaterial(string folderMaterialName, bool loadTexturesFro
         Texture* foundTexDepth = allTextures.at("d" + fileName);
         Texture* foundTexNormal = allTextures.at("n" + fileName);
 
-        pair<string, Material*> newMaterial(fileName, new PBRMaterial(foundColorTextureName, fileName, this->device, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal, glm::vec2(1, 1)));
+        pair<string, Material*> newMaterial(fileName, new PBRMaterial(foundColorTextureName, fileName, vCore, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal, glm::vec2(1, 1)));
         allMaterials.insert(newMaterial);
     }
     else if (numberOfTextures > 0)
     {
-        pair<string, Material*> newMaterial(fileName, new Material(foundColorTextureName, fileName, this->device, glm::vec2(1, 1)));
+        pair<string, Material*> newMaterial(fileName, new Material(foundColorTextureName, fileName, vCore, glm::vec2(1, 1)));
         allMaterials.insert(newMaterial);
         Helper::Cout("Created [Normal] Material: " + fileName);
     }

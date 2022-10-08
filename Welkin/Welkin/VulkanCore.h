@@ -175,6 +175,7 @@ private:
 #pragma region Buffers
 	VkCommandBuffer BeginSingleTimeCommands(VkCommandPool pool);
 	void EndSingleTimeCommands(VkCommandBuffer commandBuffer, VkQueue queue, VkCommandPool pool);
+	void CreateDescriptorsForTextures();
 #pragma endregion
 
 

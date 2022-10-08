@@ -1,13 +1,18 @@
 #include "Texture.h"
 
-Texture::Texture(std::string PATH, VulkanCore* vCore): vCore{vCore}
+Texture::Texture(std::string PATH, VulkanCore* vCore, short textureSpot): vCore{vCore}, textureSpot{textureSpot}
 {
-	stbi_uc* pixels = stbi_load(PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-	VkDeviceSize imageSize = texWidth * texHeight * 4;
+	pixels = stbi_load(PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	imageSize = texWidth * texHeight * 4;
 
 	if (!pixels)
 	{
 		throw std::runtime_error("failed to load" + PATH + " texture image!");
+	}
+
+	if (imageSize <= 0)
+	{
+		throw std::runtime_error("Image size can't be smaller then 0!");
 	}
 
 	Helper::Cout("Creating buffers, images, and views for: " + PATH);

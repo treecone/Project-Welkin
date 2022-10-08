@@ -33,6 +33,7 @@ private:
 
 	VulkanCore* vCore;
 	VkDevice* device;
+	int totalTexturesLoaded;
 
 	void LoadAllTextures(VkDevice* logicalDevice);
 	std::pair<string, unsigned short> LoadTexturesFromFolder(string folderName);

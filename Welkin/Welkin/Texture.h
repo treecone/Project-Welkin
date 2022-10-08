@@ -12,8 +12,9 @@ public:
 	stbi_uc* pixels;
 	int texWidth, texHeight, texChannels;
 	VkDeviceSize imageSize;
+	short textureSpot;
 
-	Texture(std::string PATH, VulkanCore* vCore);
+	Texture(std::string PATH, VulkanCore* vCore, short textureSpot);
 	~Texture();
 
 private:

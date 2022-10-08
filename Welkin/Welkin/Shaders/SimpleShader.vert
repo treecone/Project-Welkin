@@ -17,6 +17,8 @@ layout(push_constant) uniform PushConst
 } 
 pushConst;
 
+//Texture2D materialTextures[] : register(t0);
+
 //IN - Vertex attributes
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inUV;
