@@ -11,6 +11,7 @@ class Material
 public:
 	Material(Texture* color, std::string materialName, VulkanCore* vCore, glm::vec2 uvScale);
 	std::string GetMaterialName() { return this->materialName; };
+	Texture* GetTexture() { return this->tex_Color; };
 	VkSampler* GetSampler() { return &this->textureSampler; };
 	virtual ~Material();
 protected:

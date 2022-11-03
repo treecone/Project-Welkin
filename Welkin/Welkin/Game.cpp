@@ -52,13 +52,16 @@ void Game::AssetCreation()
 	Helper::Cout("Asset Creation", true);
 
 	//TODO change the naming conventions of models and materials
-	CreateObject("Viking Cone", "Pyramid", "VikingRoom");
+	//CreateObject("Viking Cone", "Pyramid", "VikingRoom");
 
-	Transform planeTransform(vec3(0, 0, 0), vec3(0, 0, 0), vec3(5, 5, 5));
+	Transform planeTransform(vec3(0, -3, 0), vec3(0, 0, 0), vec3(5, 5, 5));
 	CreateObject("Main Plane", "SimplePlane", "VikingRoom", planeTransform);
 
-	Transform cubeTransform(vec3(3, 0, 0), vec3(0, 0, 0), vec3(2, 5, 1));
-	CreateObject("Smooth Cube", "(HighPoly)SmoothCube", "VikingRoom", cubeTransform);
+	Transform cubeTransform(vec3(3, 0, 0), vec3(0, 0, 0), vec3(2, 2, 2));
+	//CreateObject("Smooth Cube", "(HighPoly)SmoothCube", "VikingRoom", cubeTransform);
+
+	Transform vikingTransform(vec3(0, 1, 0), vec3(0, 0, 0), vec3(2, 2, 2));
+	CreateObject("Smooth Cube", "VikingRoom", "VikingRoom", vikingTransform);
 }
 
 void Game::CreateObject(string objName, string modelName, string materialFolderName, Transform transform, bool sort)

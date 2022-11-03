@@ -17,12 +17,12 @@ public:
 	Texture(std::string PATH, VulkanCore* vCore, short textureSpot);
 	~Texture();
 
+	VkImageView GetTextureImageView() { return this->textureImageView; };
+
 private:
 	VulkanCore* vCore;
 
 	void CreateBuffers();
-	void CreateTextureImageView();
-
 	VkImage textureImage;
 	VkImageView textureImageView;
 	VkDeviceMemory textureImageMemory;

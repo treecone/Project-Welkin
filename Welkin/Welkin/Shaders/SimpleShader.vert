@@ -1,13 +1,6 @@
 #version 450
 
 //Buffers
-layout(binding = 0) uniform PerFrame 
-{
-    mat4 view;
-    mat4 proj;
-} 
-perFrame; 
-
 
 layout(push_constant) uniform PushConst
 {
@@ -17,7 +10,12 @@ layout(push_constant) uniform PushConst
 } 
 pushConst;
 
-//Texture2D materialTextures[] : register(t0);
+layout(binding = 0) uniform PerFrame 
+{
+    mat4 view;
+    mat4 proj;
+} 
+perFrame; 
 
 //IN - Vertex attributes
 layout(location = 0) in vec3 inPosition;

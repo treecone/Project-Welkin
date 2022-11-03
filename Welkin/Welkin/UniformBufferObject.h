@@ -4,10 +4,14 @@
 #include "Camera.h"
 #include "Helper.h"
 #include "VulkanCore.h"
+#include "FileManager.h"
 
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
-enum uBufferType { nullBuffer = 0, perFrame = 1, perMaterial = 2 };
+//Make bindless textures so I dont eed a max
+static const int MAX_TEXTURES_BOUND = 8;
+
+enum uBufferType { nullBuffer = 0, perFrame = 1, bindlessTextures = 2 };
 
 #pragma region UBO Structs
 /*
@@ -24,17 +28,18 @@ struct UboPerFrame
 	alignas(16) glm::mat4 proj;
 };
 
-struct UboPerMaterial
+/*struct UboPerMaterial
 {
 	vec2 uvScale;
 };
+*/
 #pragma endregion
 
 class UniformBufferObject
 {
 public:
 
-	UniformBufferObject(uBufferType bufferType, VulkanCore* vCore, Camera* mainCamera);
+	UniformBufferObject(uBufferType bufferType, VulkanCore* vCore, FileManager* fm, Camera* mainCamera);
 	~UniformBufferObject();
 
 	VkDescriptorSetLayout* GetDescriptorSetLayout() { return &descriptorSetLayout; };
@@ -48,11 +53,11 @@ private:
 	Camera* mainCamera;
 	//void (*CreateBuffer)(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&);
 	uBufferType bufferType;
+	FileManager* fm;
 
 	//TODO Find a better way to do this, like using a generic or smth
 	//Structs
 	UboPerFrame perFrameData;
-	UboPerMaterial perMaterialData;
 
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkDescriptorPool descriptorPool;
@@ -62,8 +67,12 @@ private:
 	std::vector<VkDeviceMemory> uniformBuffersMemory;
 	std::vector<VkDescriptorSet> descriptorSets;
 
+	//Imported from VulkanCore
+	std::vector<VkImageView> imageViews;
+	VkSampler mainSampler;
 
-	void CreateDescriptorSetLayout(const VkShaderStageFlags stageFlags);
+
+	void CreateDescriptorSetLayout();
 	void CreateUniformBufers();
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();

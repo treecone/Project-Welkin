@@ -7,7 +7,8 @@ Renderer::Renderer(VulkanCore* vCore, FileManager* fm, Camera* mainCamera, vecto
 	Helper::Cout("Renderer", true);
 
 	CreateRenderPass();
-	allUniformBufferObjects.push_back(new UniformBufferObject(uBufferType::perFrame, vCore, this->mainCamera));
+	allUniformBufferObjects.push_back(new UniformBufferObject(uBufferType::perFrame, vCore, fm, this->mainCamera));
+	allUniformBufferObjects.push_back(new UniformBufferObject(uBufferType::bindlessTextures, vCore, fm, this->mainCamera));
 
 	CreateGraphicsPipeline();
 	vCore->CreateFrameBuffers(&renderPass);
@@ -402,6 +403,7 @@ void Renderer::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const ui
 		}
 
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, allUniformBufferObjects.size(), allCurrentFrameDescriptorSets.data(), 0, nullptr);
+
 
 		for (unsigned long long i = 0; i < gameObjects->size(); i++)
 		{

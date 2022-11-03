@@ -29,7 +29,6 @@ private:
 	Camera* mainCamera;
 	vector<GameObject*>* gameObjects;
 
-
 #pragma region Pipeline/Passes
 
 	void CreateGraphicsPipeline();
@@ -50,7 +49,6 @@ private:
 #pragma endregion
 
 #pragma region DrawFrame and Sync Objects
-
 	void CreateSyncObjects();
 	std::vector<VkSemaphore> imageAvailableSemaphores;
 	std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -58,7 +56,6 @@ private:
 #pragma endregion
 
 #pragma region Buffers
-
 	vector<UniformBufferObject*> allUniformBufferObjects;
 #pragma endregion
 
