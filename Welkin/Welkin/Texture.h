@@ -17,7 +17,7 @@ public:
 	Texture(std::string PATH, VulkanCore* vCore, short textureSpot);
 	~Texture();
 
-	VkImageView GetTextureImageView() { return this->textureImageView; };
+	VkImageView* GetTextureImageView() { return &this->textureImageView; };
 
 private:
 	VulkanCore* vCore;

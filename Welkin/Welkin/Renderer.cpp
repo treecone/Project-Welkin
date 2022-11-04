@@ -402,8 +402,8 @@ void Renderer::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const ui
 			allCurrentFrameDescriptorSets.push_back(UBO->GetDescriptorSet(currentFrame));
 		}
 
+		//Binds all descriptor sets
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, allUniformBufferObjects.size(), allCurrentFrameDescriptorSets.data(), 0, nullptr);
-
 
 		for (unsigned long long i = 0; i < gameObjects->size(); i++)
 		{

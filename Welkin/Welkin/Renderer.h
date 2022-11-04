@@ -45,6 +45,8 @@ private:
 
 	std::vector<VkCommandBuffer> mainCommandBuffers;
 
+	int bindTexturePipeline = 0;
+
 
 #pragma endregion
 
