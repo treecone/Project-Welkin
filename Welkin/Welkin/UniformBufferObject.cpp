@@ -2,13 +2,13 @@
 
 //Good img explaining UBO's - https://vkguide.dev/docs/chapter-4/descriptors/
 
-UniformBufferObject::UniformBufferObject(uBufferType bufferType, VulkanCore* vCore, FileManager* fm, Camera* mainCamera)
+UniformBufferObject::UniformBufferObject(UniformBufferType bufferType, VulkanCore* vCore, FileManager* fm, Camera* mainCamera)
 	: bufferType{ bufferType }, mainCamera{mainCamera}, vCore {vCore}, fm{fm}
 {
 	Helper::Cout("Creating Uniform Buffer");
 	device = vCore->GetLogicalDevice();
 
-	if (bufferType == bindlessTextures)
+	if (bufferType == ALL_TEXTURES)
 	{
 		mainSampler = *fm->GetAllMaterials()->begin()->second->GetSampler();
 		for (auto& tex : *fm->GetAllTextures())
@@ -24,7 +24,7 @@ UniformBufferObject::UniformBufferObject(uBufferType bufferType, VulkanCore* vCo
 
 	CreateDescriptorSetLayout();
 
-	if (bufferType == perFrame)
+	if (bufferType == PER_FRAME)
 	{
 		CreateUniformBufers();
 	}
@@ -37,7 +37,7 @@ UniformBufferObject::~UniformBufferObject()
 {
 	vkDestroyDescriptorPool(*device, descriptorPool, nullptr);
 
-	if (bufferType != uBufferType::bindlessTextures)
+	if (bufferType != UniformBufferType::ALL_TEXTURES)
 	{
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
@@ -57,10 +57,6 @@ void UniformBufferObject::CreateDescriptorSetLayout()
 
 	switch (bufferType)
 	{
-	default:
-	case(0):
-		throw std::exception("Type of UBO not specified");
-		break;
 	case(1):
 		//Per Frame 
 		uboLayoutBinding.binding = 0;
@@ -96,7 +92,7 @@ void UniformBufferObject::CreateDescriptorSetLayout()
 
 void UniformBufferObject::CreateUniformBufers()
 {
-	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+	VkDeviceSize bufferSize = sizeof(UboPerFrame);
 
 	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 	uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);

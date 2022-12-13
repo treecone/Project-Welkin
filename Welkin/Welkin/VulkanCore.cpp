@@ -127,7 +127,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 			appInfo.pEngineName = "Welkin Engine";
 			appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-			appInfo.apiVersion = VK_API_VERSION_1_0;
+			appInfo.apiVersion = VK_API_VERSION_1_1;
 		#pragma endregion
 
 		//Tells vulkan what global extensions and validation layers we want to use
@@ -246,7 +246,7 @@ void VulkanCore::SetWindowSize(int width, int height)
 			vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 			Helper::Cout("Using Card" + (std::string)deviceProperties.deviceName);
 
-			if (deviceProperties.limits.maxPushConstantsSize < sizeof(vHelper::PushConstants))
+			if (deviceProperties.limits.maxPushConstantsSize < sizeof(Welkin_BufferStructs::PushConstant))
 			{
 				throw std::runtime_error("Allowed push constant size is too small");
 			}
@@ -404,6 +404,8 @@ void VulkanCore::SetWindowSize(int width, int height)
 
 			createInfo.pEnabledFeatures = &deviceFeatures;
 
+			//Couldn't figure out deviceFeatures2 :(
+
 			createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 			createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
@@ -416,7 +418,6 @@ void VulkanCore::SetWindowSize(int width, int height)
 			{
 				createInfo.enabledLayerCount = 0;
 			}
-
 
 		#pragma endregion
 

@@ -7,8 +7,10 @@ Renderer::Renderer(VulkanCore* vCore, FileManager* fm, Camera* mainCamera, vecto
 	Helper::Cout("Renderer", true);
 
 	CreateRenderPass();
-	allUniformBufferObjects.push_back(new UniformBufferObject(uBufferType::perFrame, vCore, fm, this->mainCamera));
-	allUniformBufferObjects.push_back(new UniformBufferObject(uBufferType::bindlessTextures, vCore, fm, this->mainCamera));
+	allUniformBufferObjects.push_back(new UniformBufferObject(UniformBufferType::PER_FRAME, vCore, fm, this->mainCamera));
+	allUniformBufferObjects.push_back(new UniformBufferObject(UniformBufferType::ALL_TEXTURES, vCore, fm, this->mainCamera));
+
+	allStorageBufferObjects.push_back(new StorageBufferObject(StorageBufferType::PER_TRANSFORM, vCore, fm, this->mainCamera));
 
 	CreateGraphicsPipeline();
 	vCore->CreateFrameBuffers(&renderPass);
@@ -193,15 +195,17 @@ void Renderer::CreateGraphicsPipeline()
 		{
 			allDescriptorLayouts.push_back(*UBO->GetDescriptorSetLayout());
 		}
+		for (auto& SBO : allStorageBufferObjects)
+		{
+			allDescriptorLayouts.push_back(*SBO->GetDescriptorSetLayout());
+		}
 		pipelineLayoutInfo.setLayoutCount = allDescriptorLayouts.size();
 		pipelineLayoutInfo.pSetLayouts = allDescriptorLayouts.data();
-		//pipelineLayoutInfo.pSetLayouts = allUniformBufferObjects[0]->GetDescriptorSetLayout();
-
 
 		VkPushConstantRange range{};
 		range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 		range.offset = 0;
-		range.size = sizeof(vHelper::PushConstants);
+		range.size = sizeof(Welkin_BufferStructs::PushConstant);
 
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &range;
@@ -401,20 +405,25 @@ void Renderer::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const ui
 		{
 			allCurrentFrameDescriptorSets.push_back(UBO->GetDescriptorSet(currentFrame));
 		}
+		for (auto& SBO : allStorageBufferObjects)
+		{
+			allCurrentFrameDescriptorSets.push_back(SBO->GetDescriptorSet(currentFrame));
+		}
 
 		//Binds all descriptor sets
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, allUniformBufferObjects.size(), allCurrentFrameDescriptorSets.data(), 0, nullptr);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, allUniformBufferObjects.size() + allStorageBufferObjects.size(), allCurrentFrameDescriptorSets.data(), 0, nullptr);
 
-		for (unsigned long long i = 0; i < gameObjects->size(); i++)
+		for (unsigned int i = 0; i < gameObjects->size(); i++)
 		{
+			//Push Constant
+			Welkin_BufferStructs::PushConstant push{};
+			/*push.world = gameObjects->at(i)->GetTransform()->GetWorldMatrix();
+			push.worldInverseTranspose = gameObjects->at(i)->GetTransform()->GetWorldInverseTransposeMatrix();*/
+			push.tempData = i;
+			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Welkin_BufferStructs::PushConstant), &push);
+
 			const auto newIndicesSize = (gameObjects->at(i)->GetMesh()->GetIndeicesSize());
 			//string newMaterialName = gameObjects->at(i)->GetMaterial()->GetMaterialName();
-
-			//Push Constant
-			vHelper::PushConstants push{};
-			push.world = gameObjects->at(i)->GetTransform()->GetWorldMatrix();
-			push.worldInverseTranspose = gameObjects->at(i)->GetTransform()->GetWorldInverseTransposeMatrix();
-			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(vHelper::PushConstants), &push);
 
 			if (newIndicesSize != lastIndicesSize)
 			{
@@ -474,6 +483,10 @@ void Renderer::DrawFrame()
 	for (auto& UBO : allUniformBufferObjects)
 	{
 		UBO->UpdateUniformBuffer(currentFrame);
+	}
+	for (auto& SBO : allStorageBufferObjects)
+	{
+		SBO->UpdateStorageBuffer(currentFrame, gameObjects);
 	}
 
 	//Sets fence(s) to unsignaled state
