@@ -4,7 +4,8 @@
 
 layout(push_constant) uniform PushConst
 {
-    int instanceID;
+    uint instanceID;
+    uint materialID;
 } 
 pushConst;
 

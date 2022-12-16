@@ -203,7 +203,7 @@ void Renderer::CreateGraphicsPipeline()
 		pipelineLayoutInfo.pSetLayouts = allDescriptorLayouts.data();
 
 		VkPushConstantRange range{};
-		range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		range.stageFlags = VK_SHADER_STAGE_ALL;
 		range.offset = 0;
 		range.size = sizeof(Welkin_BufferStructs::PushConstant);
 
@@ -419,8 +419,9 @@ void Renderer::RecordCommandBuffer(const VkCommandBuffer commandBuffer, const ui
 			Welkin_BufferStructs::PushConstant push{};
 			/*push.world = gameObjects->at(i)->GetTransform()->GetWorldMatrix();
 			push.worldInverseTranspose = gameObjects->at(i)->GetTransform()->GetWorldInverseTransposeMatrix();*/
-			push.tempData = i;
-			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Welkin_BufferStructs::PushConstant), &push);
+			push.instanceID = i;
+			push.materialID = i % 2;
+			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_ALL, 0, sizeof(Welkin_BufferStructs::PushConstant), &push);
 
 			const auto newIndicesSize = (gameObjects->at(i)->GetMesh()->GetIndeicesSize());
 			//string newMaterialName = gameObjects->at(i)->GetMaterial()->GetMaterialName();

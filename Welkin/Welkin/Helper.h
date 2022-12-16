@@ -20,10 +20,8 @@ namespace Welkin_BufferStructs
 
 	struct PushConstant
 	{
-		//aka model->world matrix
-		alignas(16) int tempData;
-
-		//unsigned short materialID;
+		alignas(4) unsigned int instanceID;
+		alignas(4) unsigned int materialID;
 	};
 };
 
