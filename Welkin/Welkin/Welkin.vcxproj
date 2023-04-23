@@ -156,6 +156,7 @@
     <ClCompile Include="PBRMaterial.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="stb.cpp" />
+    <ClCompile Include="StorageBufferObject.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="UniformBufferObject.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="PBRMaterial.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="StorageBufferObject.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="UniformBufferObject.h" />

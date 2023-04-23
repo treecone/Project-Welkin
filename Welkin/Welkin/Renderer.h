@@ -6,6 +6,7 @@
 #include "Helper.h"
 #include "VulkanCore.h"
 #include "UniformBufferObject.h"
+#include "StorageBufferObject.h"
 #include "GameObject.h"
 
 class Renderer
@@ -59,6 +60,7 @@ private:
 
 #pragma region Buffers
 	vector<UniformBufferObject*> allUniformBufferObjects;
+	vector<StorageBufferObject*> allStorageBufferObjects;
 #pragma endregion
 
 };

@@ -58,7 +58,7 @@ void Game::AssetCreation()
 	CreateObject("Main Plane", "SimplePlane", "VikingRoom", planeTransform);
 
 	Transform cubeTransform(vec3(3, 0, 0), vec3(0, 0, 0), vec3(2, 2, 2));
-	//CreateObject("Smooth Cube", "(HighPoly)SmoothCube", "VikingRoom", cubeTransform);
+	CreateObject("Smooth Cube", "(HighPoly)SmoothCube", "VikingRoom", cubeTransform);
 
 	Transform vikingTransform(vec3(0, 1, 0), vec3(0, 0, 0), vec3(2, 2, 2));
 	CreateObject("Smooth Cube", "VikingRoom", "VikingRoom", vikingTransform);

@@ -18,7 +18,7 @@ FileManager::FileManager(VulkanCore* vCore)
 
     LoadAllModels();
     //LoadAllTextures(device);
-    //CreateMaterial("Brick");
+    CreateMaterial("BrickSimple");
     CreateMaterial("VikingRoom");
 
     LoadAllShaders(device);
