@@ -18,8 +18,8 @@ FileManager::FileManager(VulkanCore* vCore)
 
     LoadAllModels();
     //LoadAllTextures(device);
-    CreateMaterial("BrickSimple");
-    CreateMaterial("VikingRoom");
+    CreateMaterial("Brick");
+    CreateMaterial("Tiles115");
 
     LoadAllShaders(device);
 }
@@ -44,7 +44,7 @@ FileManager::~FileManager()
 
     for (const auto& textureFile : allTextures)
     {
-        delete textureFile.second;
+        delete textureFile;
     }
 }
 
@@ -181,6 +181,7 @@ void FileManager::LoadAllModels()
 
 //First load all textures, then create the materials with pointers to the appropriate textures
 
+/*
 void FileManager::LoadAllTextures(VkDevice* logicalDevice)
 {
     Helper::Cout("-Loading all textures");
@@ -196,14 +197,15 @@ void FileManager::LoadAllTextures(VkDevice* logicalDevice)
         {
             if (entity.path().extension() == ext)
             {
-                pair<string, Texture*> newTex(rawName, new Texture(entity.path().string(), vCore, totalTexturesLoaded));
-                allTextures.insert(newTex);
+				Texture* newTex = new Texture(entity.path().string(), vCore, totalTexturesLoaded, WRITEDATAHERE);
+				allTextures.push_back(newTex);
 				totalTexturesLoaded++;
                 Helper::Cout("-- Loaded Texture: " + fileName);
             }
         }
     }
 }
+*/
 
 //Returns first raw file name and number of textures found
 std::pair<string, unsigned short> FileManager::LoadTexturesFromFolder(string folderName)
@@ -223,8 +225,8 @@ std::pair<string, unsigned short> FileManager::LoadTexturesFromFolder(string fol
         {
             if (entity.path().extension() == ext)
             {
-				pair<string, Texture*> newTex(rawName, new Texture(entity.path().string(), vCore, totalTexturesLoaded));
-				allTextures.insert(newTex);
+				Texture* newTex = new Texture(entity.path().string(), vCore, totalTexturesLoaded, static_cast<TEXTURE_TYPE>(numberOfTextures));
+				allTextures.push_back(newTex);
                 Helper::Cout("-- Loaded Texture: " + fileName);
 
                 numberOfTextures++;
@@ -282,38 +284,24 @@ void FileManager::CreateMaterial(string folderMaterialName, bool loadTexturesFro
     //Remove first letter of the name to get the generic name of all the textures
     fileName.erase(0, 1);
 
-    Texture* foundColorTextureName = allTextures.at("c" + fileName);
-
-    if (foundColorTextureName == nullptr)
-    {
-        Helper::Warning("Found no color texture for " + fileName + " --Skipping");
-        return;
-    }
-
-    if (numberOfTextures > 2)
+    if (numberOfTextures == 5)
     {
         Helper::Cout("-Creating [PBR] Material: " + fileName);
 
         //PBR material
-        throw std::runtime_error("Created Material with no textures in it!");
+        //Update this to be more universal and flexible in future
+		Texture* foundColorTextureName = allTextures[allTextures.size() - 4];
+        Texture* foundTexRoughness = allTextures[allTextures.size() - 1];
+        Texture* foundTexAO = allTextures[allTextures.size() - 5];
+        Texture* foundTexDepth = allTextures[allTextures.size() - 3];
+        Texture* foundTexNormal = allTextures[allTextures.size() - 2];
 
-        Texture* foundTexRoughness = allTextures.at("r" + fileName);
-        Texture* foundTexAO = allTextures.at("a" + fileName);
-        Texture* foundTexDepth = allTextures.at("d" + fileName);
-        Texture* foundTexNormal = allTextures.at("n" + fileName);
-
-        pair<string, Material*> newMaterial(fileName, new PBRMaterial(foundColorTextureName, fileName, vCore, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal, glm::vec2(1, 1)));
+        pair<string, Material*> newMaterial(fileName, new Material(foundColorTextureName, fileName, vCore, foundTexRoughness, foundTexAO, foundTexDepth, foundTexNormal, glm::vec2(1, 1)));
         allMaterials.insert(newMaterial);
-    }
-    else if (numberOfTextures > 0)
-    {
-        pair<string, Material*> newMaterial(fileName, new Material(foundColorTextureName, fileName, vCore, glm::vec2(1, 1)));
-        allMaterials.insert(newMaterial);
-        Helper::Cout("Created [Normal] Material: " + fileName);
     }
     else
     {
-        Helper::Warning("Found no textures to create " + fileName + " material!");
+		throw std::runtime_error("Found no textures during creation for material: " + fileName);
     }
 
 }

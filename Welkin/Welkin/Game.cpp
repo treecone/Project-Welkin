@@ -55,13 +55,13 @@ void Game::AssetCreation()
 	//CreateObject("Viking Cone", "Pyramid", "VikingRoom");
 
 	Transform planeTransform(vec3(0, -3, 0), vec3(0, 0, 0), vec3(5, 5, 5));
-	CreateObject("Main Plane", "SimplePlane", "VikingRoom", planeTransform);
+	CreateObject("Main Plane", "SimplePlane", "Brick", planeTransform);
 
 	Transform cubeTransform(vec3(3, 0, 0), vec3(0, 0, 0), vec3(2, 2, 2));
-	CreateObject("Smooth Cube", "(HighPoly)SmoothCube", "VikingRoom", cubeTransform);
+	CreateObject("Smooth Cube", "(HighPoly)SmoothCube", "Tiles115", cubeTransform);
 
 	Transform vikingTransform(vec3(0, 1, 0), vec3(0, 0, 0), vec3(2, 2, 2));
-	CreateObject("Smooth Cube", "VikingRoom", "VikingRoom", vikingTransform);
+	CreateObject("Smooth Cube", "VikingRoom", "Tiles115", vikingTransform);
 }
 
 void Game::CreateObject(string objName, string modelName, string materialFolderName, Transform transform, bool sort)

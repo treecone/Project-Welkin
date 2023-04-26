@@ -9,7 +9,7 @@
 class Material
 {
 public:
-	Material(Texture* color, std::string materialName, VulkanCore* vCore, glm::vec2 uvScale);
+	Material(Texture* tex_Color, std::string materialName, VulkanCore* vCore, Texture* tex_Roughness, Texture* tex_AO, Texture* tex_Depth, Texture* tex_Normal, glm::vec2 uvScale);
 	std::string GetMaterialName() { return this->materialName; };
 	Texture* GetTexture() { return this->tex_Color; };
 	VkSampler* GetSampler() { return &this->textureSampler; };
@@ -27,5 +27,9 @@ protected:
 
 	//Images
 	Texture* tex_Color;
+	Texture* tex_Roughness;
+	Texture* tex_AO;
+	Texture* tex_Depth;
+	Texture* tex_Normal;
 
 };

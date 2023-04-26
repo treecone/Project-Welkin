@@ -14,13 +14,14 @@ public:
 	VkDeviceSize imageSize;
 	short textureSpot;
 
-	Texture(std::string PATH, VulkanCore* vCore, short textureSpot);
+	Texture(std::string PATH, VulkanCore* vCore, short textureSpot, TEXTURE_TYPE textureType);
 	~Texture();
 
 	VkImageView* GetTextureImageView() { return &this->textureImageView; };
 
 private:
 	VulkanCore* vCore;
+	TEXTURE_TYPE textureType;
 
 	void CreateBuffers();
 	VkImage textureImage;

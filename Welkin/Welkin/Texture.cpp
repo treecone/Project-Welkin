@@ -1,6 +1,7 @@
 #include "Texture.h"
 
-Texture::Texture(std::string PATH, VulkanCore* vCore, short textureSpot): vCore{vCore}, textureSpot{textureSpot}
+Texture::Texture(std::string PATH, VulkanCore* vCore, short textureSpot, TEXTURE_TYPE textureType)
+	: vCore{vCore}, textureSpot{textureSpot}, textureType{textureType}
 {
 	pixels = stbi_load(PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 	imageSize = texWidth * texHeight * 4;

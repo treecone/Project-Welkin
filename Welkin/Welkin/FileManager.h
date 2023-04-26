@@ -12,7 +12,6 @@
 #include <vector>
 #include "Vertex.h"
 #include "Material.h"
-#include "PBRMaterial.h"
 #include "Helper.h"
 #include "Mesh.h"
 #include "VulkanCore.h"
@@ -28,7 +27,7 @@ public:
 	Mesh* FindMesh(string name);
 	Material* FindMaterial(string name);
 	unordered_map<string, Material*>* GetAllMaterials() { return &this->allMaterials; };
-	unordered_map<string, Texture*>* GetAllTextures() { return &this->allTextures; };
+	vector<Texture*>* GetAllTextures() { return &this->allTextures; };
 	VkShaderModule* FindShaderModule(string name);
 
 private:
@@ -49,5 +48,5 @@ private:
 	std::unordered_map<string, Mesh*> allMeshes;
 	std::unordered_map<string, VkShaderModule*> allShaders;
 	std::unordered_map<string, Material*> allMaterials;
-	std::unordered_map<string, Texture*> allTextures;
+	vector<Texture*> allTextures;
 };

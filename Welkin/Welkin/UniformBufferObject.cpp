@@ -13,7 +13,7 @@ UniformBufferObject::UniformBufferObject(UniformBufferType bufferType, VulkanCor
 		mainSampler = *fm->GetAllMaterials()->begin()->second->GetSampler();
 		for (auto& tex : *fm->GetAllTextures())
 		{
-			imageViews.push_back(*tex.second->GetTextureImageView());
+			imageViews.push_back(*tex->GetTextureImageView());
 		}
 
 		if (imageViews.empty() || mainSampler == NULL)

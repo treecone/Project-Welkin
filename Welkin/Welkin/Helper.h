@@ -10,6 +10,15 @@ namespace Welkin_Settings
 	static const unsigned int MAX_OBJECTS = 2048;
 };
 
+enum TEXTURE_TYPE
+{
+	TT_AMBIENTOCCLUSION = 0,
+	TT_COLOR = 1,
+	TT_DEPTH = 2,
+	TT_NORMAL = 3,
+	TT_ROUGHNESS = 4
+};
+
 namespace Welkin_BufferStructs
 {
 	struct PerTransformStruct

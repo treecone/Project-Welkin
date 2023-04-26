@@ -1,7 +1,7 @@
 #include "Material.h"
 
-Material::Material(Texture* color, std::string materialName, VulkanCore* vCore, glm::vec2 uvScale)
-	: tex_Color {color}, materialName {materialName}, uvScale {uvScale}, vCore{vCore}
+Material::Material(Texture* tex_Color, std::string materialName, VulkanCore* vCore, Texture* tex_Roughness, Texture* tex_AO, Texture* tex_Depth, Texture* tex_Normal, glm::vec2 uvScale)
+	:vCore{ vCore }, tex_Roughness{ tex_Roughness }, tex_AO{ tex_AO }, tex_Depth{ tex_Depth }, tex_Normal{ tex_Normal }
 {
 	CreateTextureSampler();
 }
@@ -12,7 +12,7 @@ Material::~Material()
 }
 
 void Material::CreateTextureSampler()
-{
+{ 
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	samplerInfo.magFilter = VK_FILTER_LINEAR;
